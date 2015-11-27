@@ -256,6 +256,6 @@
 
 /* Special adjustments for better display of the form in Greek */
 .gradingform_erubric.hellenic .enrichedcriterion .rich .modulecontainer {width: 165px;}
-.gradingform_erubric_editform.hellenic .fitemtitle {width:110px !important;padding-top:0px !important;} /* Importance needed to fit the form into page width. */
-.gradingform_erubric_editform.hellenic .felement {margin-left:120px !important;} /* Importance needed to fit the form into page width. */
+.gradingform_erubric_editform.hellenic .fitemtitle {width:130px !important;padding-top:0px !important;} /* Importance needed to fit the form into page width. */
+.gradingform_erubric_editform.hellenic .felement {margin-left:140px !important;} /* Importance needed to fit the form into page width. */
 .gradingform_erubric_editform.hellenic .gradingform_erubric.hellenic .enrichedcriterion .rich .modulecontainer {width: 169px;}
