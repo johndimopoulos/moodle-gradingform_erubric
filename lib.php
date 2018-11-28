@@ -17,8 +17,8 @@
 /**
  * Grading method controller for the Learning Analytics Enriched Rubric plugin
  *
- * @package    gradingform
- * @subpackage Learinng Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform_erubric
+ * @name       Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -29,8 +29,8 @@ require_once($CFG->dirroot.'/grade/grading/form/lib.php');
 
 /**
  * This controller encapsulates the enriched rubric grading logic
- * @package    gradingform
- * @subpackage Learinng Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform_erubric
+ * @name       Learinng Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -160,6 +160,14 @@ class gradingform_erubric_controller extends gradingform_controller {
 
         // Update enriched rubric data.
         $haschanges = array();
+        // Check if 'lockzeropoints' option has changed.
+        $newlockzeropoints = $newdefinition->erubric['options']['lockzeropoints'];
+        $currentoptions = $this->get_options();
+        if ((bool)$newlockzeropoints != (bool)$currentoptions['lockzeropoints']) {
+            $haschanges[3] = true;
+        }
+
+        // Update rubric data
         if (empty($newdefinition->erubric['criteria'])) {
             $newcriteria = array();
         } else {
@@ -168,7 +176,7 @@ class gradingform_erubric_controller extends gradingform_controller {
         $currentcriteria = $currentdefinition->erubric_criteria;
 
         // Create tables to use for evaluation of form data.
-        $enrichedcriteriafields = array('sortorder', 'description', 'criteriontype', 'collaborationtype', 'operator', 'referencetype');
+        $enrichedcriteriafields = array('sortorder', 'description', 'descriptionformat', 'criteriontype', 'collaborationtype', 'operator', 'referencetype');
         $enrichedlevelfields = array('score', 'definition', 'definitionformat', 'enrichedvalue');
         foreach ($newcriteria as $id => $criterion) {
             // Get the list of submitted levels (if they exist).
@@ -255,7 +263,7 @@ class gradingform_erubric_controller extends gradingform_controller {
                     }
                     // Check if there is a change in any of the enriched fields.
                     if (count($data)>1 || (count($data)==2 && !isset($data['description']))){
-                        $haschanges[5] = true;
+                        $haschanges[5] = true; //TODO: Check if this condition works. Maybe there is something about descriptionformat.
                     // Else, only the criterion description has changed.
                     }else{
                         $haschanges[1] = true;
@@ -276,14 +284,11 @@ class gradingform_erubric_controller extends gradingform_controller {
             }
             foreach ($levelsdata as $levelid => $level) {
                 if (isset($level['score'])) {
-                    $level['score'] = (float)$level['score'];
-                    if ($level['score']<0) {
-                        $level['score'] = 0;
-                    }
+                    $level['score'] = unformat_float($level['score']);
                 }
 
                 if (array_key_exists('enrichedvalue', $level) && !is_null($level['enrichedvalue']) && strlen(trim($level['enrichedvalue']))>0) {
-                    $level['enrichedvalue'] = (float)$level['enrichedvalue'];
+                    $level['enrichedvalue'] = unformat_float($level['enrichedvalue']);
                 }else{
                     $level['enrichedvalue'] = null;
                 }
@@ -341,7 +346,7 @@ class gradingform_erubric_controller extends gradingform_controller {
                 }
             }
         }
-        // Rremove deleted criteria from DB.
+        // Remove deleted criteria from DB.
         foreach (array_keys($currentcriteria) as $id) {
             if (!array_key_exists($id, $newcriteria)) {
                 if ($doupdate) {
@@ -437,7 +442,7 @@ class gradingform_erubric_controller extends gradingform_controller {
                 foreach (array('id', 'score', 'definition', 'definitionformat', 'enrichedvalue') as $fieldname) {
                     $value = $record->{'erl'.$fieldname};
                     if ($fieldname == 'score' || ($fieldname == 'enrichedvalue' && !is_null($value))) {
-                        $value = (float)$value; // To prevent displing something like '1.00000'.
+                        $value = (float)$value; // To prevent displaying something like '1.00000'.
                     }
                     $this->definition->erubric_criteria[$record->ercid]['levels'][$record->erlid][$fieldname] = $value;
                 }
@@ -461,11 +466,12 @@ class gradingform_erubric_controller extends gradingform_controller {
     public static function get_default_options() {
         $options = array(
             'sortlevelsasc' => 1,
+            'lockzeropoints' => 1,
             'alwaysshowdefinition' => 1,
             'showdescriptionteacher' => 1,
             'showdescriptionstudent' => 1,
-            'showscorestudent' => 1,
             'showscoreteacher' => 1,
+            'showscorestudent' => 1,
             'enableremarks' => 1,
             'showremarksstudent' => 1,
             'enrichmentoptions' => 1,
@@ -493,6 +499,11 @@ class gradingform_erubric_controller extends gradingform_controller {
             $thisoptions = json_decode($this->definition->options);
             foreach ($thisoptions as $option => $value) {
                 $options[$option] = $value;
+            }
+            if (!array_key_exists('lockzeropoints', $thisoptions)) {
+                // Rubrics created before Moodle 3.2 don't have 'lockzeropoints' option. In this case they should not
+                // assume default value 1 but use "legacy" value 0.
+                $options['lockzeropoints'] = 1;
             }
         }
         return $options;
@@ -535,9 +546,9 @@ class gradingform_erubric_controller extends gradingform_controller {
      */
     public function get_definition_copy(gradingform_controller $target) {
 
-        // Consider the required action as confirmed.
+        // Consider the required action as not confirmed unless the user approved it.
         $enrichedconfirmed  = optional_param('enrichedconfirmed', false, PARAM_BOOL);
-        // Publish the given form definition as a new template in the forms bank.
+        // Check if we need to display the appropriate form of consent to the user.
         $shareform  = optional_param('shareform', null, PARAM_INT);
         GLOBAL $PAGE;
         $output = $PAGE->get_renderer('core_grading');
@@ -589,7 +600,7 @@ class gradingform_erubric_controller extends gradingform_controller {
         global $CFG;
         return array(
             'maxfiles' => -1,
-            'maxbytes' => get_max_upload_file_size($CFG->maxbytes),
+            'maxbytes' => get_user_max_upload_file_size($context, $CFG->maxbytes),
             'context'  => $context,
         );
     }
@@ -657,7 +668,10 @@ class gradingform_erubric_controller extends gradingform_controller {
             $erubric .= $output->box($this->get_formatted_description(), 'gradingform_erubric-description');
         }
         if (has_capability('moodle/grade:managegradingforms', $page->context)) {
-            $erubric .= $output->display_erubric_mapping_explained($this->get_min_max_score());
+            if (!$options['lockzeropoints']) {
+                // Warn about using grade calculation method where minimum number of points is flexible.
+                $erubric .= $output->display_erubric_mapping_explained($this->get_min_max_score());
+            }
             $erubric .= $output->display_erubric($criteria, $options, self::DISPLAY_PREVIEW, 'erubric');
         } else {
             $erubric .= $output->display_erubric($criteria, $options, self::DISPLAY_PREVIEW_GRADED, 'erubric');
@@ -704,7 +718,8 @@ class gradingform_erubric_controller extends gradingform_controller {
             return $this->get_instance($instance);
         }
         if ($itemid && $raterid) {
-            if ($rs = $DB->get_records('grading_instances', array('raterid' => $raterid, 'itemid' => $itemid), 'timemodified DESC', '*', 0, 1)) {
+            $params = array('definitionid' => $this->definition->id, 'raterid' => $raterid, 'itemid' => $itemid);
+            if ($rs = $DB->get_records('grading_instances', $params, 'timemodified DESC', '*', 0, 1)) {
                 $record = reset($rs);
                 $currentinstance = $this->get_current_instance($raterid, $itemid);
                 if ($record->status == gradingform_erubric_instance::INSTANCE_STATUS_INCOMPLETE &&
@@ -863,8 +878,8 @@ class gradingform_erubric_controller extends gradingform_controller {
  *
  * Stores information and performs actions like update, copy, validate, submit, etc.
  *
- * @package    gradingform
- * @subpackage Learinng Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform_erubric
+ * @name       Learinng Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -901,6 +916,37 @@ class gradingform_erubric_instance extends gradingform_instance {
             $DB->insert_record('gradingform_erubric_fillings', $params);
         }
         return $instanceid;
+    }
+
+    /**
+     * Determines whether the submitted form was empty.
+     *
+     * @param array $elementvalue value of element submitted from the form
+     * @return boolean true if the form is empty
+     */
+    public function is_empty_form($elementvalue) {
+        $criteria = $this->get_controller()->get_definition()->erubric_criteria;
+
+        foreach ($criteria as $id => $criterion) {
+            if (isset($elementvalue['criteria'][$id]['levelid'])
+                    || !empty($elementvalue['criteria'][$id]['remark'])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Removes the attempt from the gradingform_guide_fillings table
+     * @param array $data the attempt data
+     */
+    public function clear_attempt($data) {
+        global $DB;
+
+        foreach ($data['criteria'] as $criterionid => $record) {
+            $DB->delete_records('gradingform_erubric_fillings',
+                array('criterionid' => $criterionid, 'instanceid' => $this->get_id()));
+        }
     }
 
     /**
@@ -1018,11 +1064,18 @@ class gradingform_erubric_instance extends gradingform_instance {
             $curscore += $this->get_controller()->get_definition()->erubric_criteria[$id]['levels'][$record['levelid']]['score'];
         }
 
-        $gradeoffset = ($curscore-$scores['minscore'])/($scores['maxscore']-$scores['minscore'])*($maxgrade-$mingrade);
-        if ($this->get_controller()->get_allow_grade_decimals()) {
-            return $gradeoffset + $mingrade;
+        $allowdecimals = $this->get_controller()->get_allow_grade_decimals();
+        $options = $this->get_controller()->get_options();
+
+        if ($options['lockzeropoints']) {
+            // New grade calculation method when 0-level is locked.
+            $grade = max($mingrade, $curscore / $scores['maxscore'] * $maxgrade);
+            return $allowdecimals ? $grade : round($grade, 0);
+        } else {
+            // Traditional grade calculation method.
+            $gradeoffset = ($curscore - $scores['minscore']) / ($scores['maxscore'] - $scores['minscore']) * ($maxgrade - $mingrade);
+            return ($allowdecimals ? $gradeoffset : round($gradeoffset, 0)) + $mingrade;
         }
-        return round($gradeoffset, 0) + $mingrade;
     }
 
     /**
@@ -1056,7 +1109,8 @@ class gradingform_erubric_instance extends gradingform_instance {
         }
         $currentinstance = $this->get_current_instance();
         if ($currentinstance && $currentinstance->get_status() == gradingform_instance::INSTANCE_STATUS_NEEDUPDATE) {
-            $html .= html_writer::tag('div', get_string('needregrademessage', 'gradingform_erubric'), array('class' => 'gradingform_erubric-regrade'));
+            $html .= html_writer::tag('div', get_string('needregrademessage', 'gradingform_erubric'),
+                                      array('class' => 'gradingform_erubric-regrade', 'role' => 'alert'));
         }
         $haschanges = false;
         if ($currentinstance) {

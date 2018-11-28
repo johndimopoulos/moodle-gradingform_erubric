@@ -12,6 +12,8 @@
                 [input type=submit]
             .movedown
                 [input type=submit]
+            .duplicate
+                [input type=submit]
         .description
         .levels
             td.level[.first][.last][.odd|.even]
@@ -90,13 +92,10 @@
                     i
 */
 /* E-rubric form. */
-.gradingform_erubric_editform .fitemtitle {width:80px !important;padding-top:0px !important;} /* Importance needed to fit the form into page width. */
-.gradingform_erubric_editform .felement {margin-left:90px !important;} /* Importance needed to fit the form into page width. */
 .gradingform_erubric_editform .editor_atto_notification {position:static !important;height:auto !important;} /* Importance needed to properly show the notifications above criteria. */
 .gradingform_erubric_editform .status {font-weight:normal;text-transform:uppercase;font-size:60%;padding:0.25em;border:1px solid #EEE;}
 .gradingform_erubric_editform .status.ready {background-color:#e7f1c3;border-color:#AAEEAA;}
 .gradingform_erubric_editform .status.draft {background-color:#f3f2aa;border-color:#EEEE22;}
-.gradingform_erubric_editform .editor_atto_wrap {max-width:95%;}
 
 .gradingform_erubric .enrichedcriteria {padding: 3px;}
 .gradingform_erubric.editor .criterion .controls,
@@ -105,7 +104,7 @@
 .gradingform_erubric.editor .criterion .addlevel,
 .gradingform_erubric .criterion .remark,
 .gradingform_erubric .criterion .levels .level {vertical-align: top;}
-.gradingform_erubric.editor {overflow: auto; max-width: 95%; position: relative; min-width: 700px;} /* better view of rubric with many levels on preview */
+.gradingform_erubric.editor {overflow: auto; position: relative;} /* better view of rubric with many levels on preview */
 
 .gradingform_erubric.editor .criterion .controls,
 .gradingform_erubric .criterion .description,
@@ -115,10 +114,10 @@
 
 .gradingform_erubric.editor .criterion .addlevel,
 .gradingform_erubric .criterion .remark {max-width: 100px;}
-.gradingform_erubric .criterion .remark  textarea{max-width: 98px;padding: 0px !important;} /* Importance needed for grading */
+.gradingform_erubric .criterion .remark  textarea{width: 100%;padding: 0px !important;} /* Importance needed for grading */
 
 /* Rubric results during grading from Learning Analytics */
-.gradingform_erubric .enrichedcriterion .results {padding-left: 4px;min-width:106px;vertical-align:middle;}
+.gradingform_erubric .enrichedcriterion .results {padding-left: 4px;min-width:112px;vertical-align:middle;}
 .gradingform_erubric .enrichedcriterion .results  hr{width: 38px;margin:1px 0px 2px 39px;color:#000;border-top: 0px;border-bottom: 1px solid #000;}
 .gradingform_erubric .enrichedcriterion .results .studentico {display:inline-block;width:16px; height:16px; background: transparent url([[pix:i/user]]) no-repeat center top; margin:0px 2px; padding:0px;}
 .gradingform_erubric .enrichedcriterion .results .studentsico {display:inline-block;width:16px; height:16px; background: transparent url([[pix:i/cohort]]) no-repeat center top; margin:0px 2px; padding:0px;}
@@ -130,7 +129,8 @@
 .gradingform_erubric .enrichedcriterion .results .outcome {display:inline-block;width:16px; height:16px; background: transparent url([[pix:i/outcomes]]) no-repeat center bottom;}
 .gradingform_erubric .enrichedcriterion .results .valuenull {width:32px; height:32px; background: transparent url([[pix:b/edit-delete]]) no-repeat center; background-size: cover; margin: auto;}
 
-.gradingform_erubric .criterion .remark {font-style: italic; font-size: 90%;}
+.gradingform_erubric.view {overflow: auto;}
+.gradingform_erubric.view .criterion .remark {font-style: italic; font-size: 90%; overflow: auto;}
 .gradingform_erubric .criteria {width: 100%;height:100%;max-height:190px;}
 .gradingform_erubric .criterion {border:1px solid #DDD;overflow: hidden;}
 .gradingform_erubric .criterion.even {background:#F0F0F0;}
@@ -141,7 +141,7 @@
 .gradingform_erubric .criterion .levels table,
 .gradingform_erubric .criterion .levels table tbody {padding:0;margin:0;}
 
-.gradingform_erubric .criterion .levels .level {border-left:1px solid #DDD !important; max-width:150px;} /* Importance needed when student views evaluation. */
+.gradingform_erubric .criterion .levels .level {border-left:1px solid #DDD !important; max-width:145px; overflow: auto;} /* Importance needed when student views evaluation. */
 .gradingform_erubric .criterion .levels .level .level-wrapper {position:relative;min-width:125px;}
 .gradingform_erubric .criterion .levels .level .level-wrapper  textarea{height: initial !important;} /* Importance needed for the textarea NOT to appear too small. */
 .gradingform_erubric .criterion .levels .level.last {border-right:1px solid #DDD !important;} /* Importance needed when student views evaluation. */
@@ -161,7 +161,7 @@
 .enrichedcriterion.even {background:#F0F0F0;}
 .gradingform_erubric .enrichedcriterion .enriched-wrapper  {padding-right:5px;padding-left:2px;}
 .gradingform_erubric .enrichedcriterion .rich  {line-height: 2; color: #575;}
-.gradingform_erubric .enrichedcriterion .rich  img {vertical-align: middle;}
+.gradingform_erubric .enrichedcriterion .rich  img {vertical-align: middle;margin-right: 0px;}
 .gradingform_erubric .enrichedcriterion .rich .modulecontainer {display: inline-block; border: 0; margin: 0; width: 169px; float: right;text-align:right;}
 .gradingform_erubric .enrichedcriterion .rich select {float: right;margin-bottom:initial; height:28px;}
 .gradingform_erubric .enrichedcriterion .rich ul {list-style-type: none; margin: 0; padding: 0px 0px 0px 5px;}
@@ -189,13 +189,12 @@
 .gradingform_erubric .plainvaluerich.empty {font-style: italic; color: #AAA;}
 .gradingform_erubric.editor .enrichedcriterion .coursemodule .delete input {width:16px; height:16px; background: transparent url([[pix:i/invalid]]) no-repeat center top; margin:0px; padding:0px;}
 .gradingform_erubric.editor .enrichedcriterion .coursemodule .delete { display: inline;}
-.gradingform_erubric .enrichedcriterion .addlevel {text-align: center;}
+.gradingform_erubric .enrichedcriterion .addlevel,
+.gradingform_erubric .enrichedcriterion .helptooltip {text-align: center;}
 
 /* Evaluation */
-.gradeform .fitem .fitemtitle {width:100px !important;} /* Importance needed during grading for better fit of rubric */
-.gradeform .fitem .felement {margin-left:110px !important;} /* Importance needed during grading for better fit of rubric */
 .gradeform .fitem.fitem_feditor,
-.gradingform_erubric.evaluate {margin-right: 10px;}
+.gradingform_erubric.evaluate {overflow: auto; width: 100%;}
 .gradingform_erubric .criterion .levels .level.currentchecked {background:#fff0f0;}
 .gradingform_erubric .criterion .levels .level.checked {background:#d0ffd0;}
 .gradingform_erubric.evaluate .enrichedcriterion .rich .modulecontainer {display: inline-block; border: 0; margin: 0; width: 165px; float: right;text-align:right;}
@@ -208,44 +207,47 @@
 /* Replace buttons with images. */
 .gradingform_erubric.editor .delete input,
 .gradingform_erubric.editor .moveup input,
-.gradingform_erubric.editor .movedown input{text-indent: -1000em;cursor:pointer;border:none;}
+.gradingform_erubric.editor .movedown input,
+.gradingform_erubric.editor .duplicate input{text-indent: -1000em;cursor:pointer;border:none;}
 .gradingform_erubric.editor .criterion .controls .delete input {width:20px;height:16px;background: transparent url([[pix:i/invalid]]) no-repeat center top;}
 .gradingform_erubric.editor .levels .level .delete input {width:20px;height:16px;background: transparent url([[pix:i/invalid]]) no-repeat center top;margin:0px;padding:0px;}
 .gradingform_erubric.editor .moveup input {width:20px;height:15px;background: transparent url([[pix:t/up]]) no-repeat center top;margin-top:4px;}
 .gradingform_erubric.editor .movedown input {width:20px;height:15px;background: transparent url([[pix:t/down]]) no-repeat center top;margin-top:4px;}
+.gradingform_erubric.editor .duplicate input {width:20px;height:15px;background: transparent url([[pix:t/copy]]) no-repeat center top;margin-top:4px;}
 
 .gradingform_erubric.editor .addcriterion input,
 .gradingform_erubric.editor .addlevel input {background: transparent url([[pix:t/add]]) no-repeat;display:block;color:#555555;font-weight:bold;text-decoration:none;}
 .gradingform_erubric.editor .addcriterion input {background-position: 5px 8px;height:30px;line-height:21px;margin-top:5px;margin-bottom:14px;padding-left:20px;padding-right:10px;}
 .gradingform_erubric.editor .addlevel input {background-position: 5px 6px;height:25px;line-height:17px;margin-bottom:10px;padding-left:20px;padding-right:6px;}
 
+.gradingform_erubric .options {margin-top: 15px;}
 .gradingform_erubric .options .optionsheading {font-weight:bold;font-size:1.1em;padding-bottom:5px;}
-.gradingform_erubric .options .option {padding-bottom:2px;}
 .gradingform_erubric .options .option .value {margin-left: 5px;font-weight:bold;}
+.gradingform_erubric .options .option input[type='checkbox'] {margin-right:5px;vertical-align:top;margin-top:5px;}
 
 /* Errors & Warnings */
 .gradingform_erubric_editform .generalbox .missingmodule,
-.gradingform_erubric_editform .errormessage {max-width: 91%;padding:5px 5px 5px 30px;border:1px solid #F00;margin-bottom:10px;background:#F7F0F0 url([[pix:i/risk_xss]]) no-repeat 5px;} /* Warning message during editing on top of rubric form */
-.gradingform_erubric .enrichedcriterion .rich span.missing {color: #FF0000; padding-left: 23px; background: transparent url([[pix:i/risk_xss]]) no-repeat left;} /* Missing cource module from enriched criteria */
+.gradingform_erubric_editform .errormessage {border:1px dashed #F00;background:#F7F0F0 url([[pix:i/risk_xss]]) no-repeat center 5px;} /* Warning message during editing on top of rubric form */
+.gradingform_erubric .enrichedcriterion .rich span.missing {color: #FF0000; padding-left: 23px; background: transparent url([[pix:i/risk_xss]]) no-repeat left;} /* Missing course module from enriched criteria */
 .gradingform_erubric .enrichedcriterion .levels .enrichedlevel .richvalue.error,  /* Missing value from enriched level */
-.gradingform_erubric .enrichedcriterion .rich .error,                           /* Missing cource module from enriched criteria */
+.gradingform_erubric .enrichedcriterion .rich .error,                           /* Missing course module from enriched criteria */
 .gradingform_erubric .enrichedcriterion .rich.error {background:#FFDDDD;}       /* Missing enriched criterion (criterion type, collaboration type, operator, etc.) */
 
-.gradingform_erubric .enrichedcriterion .missingmodule {background: transparent url([[pix:i/risk_xss]]) no-repeat left; padding-left: 25px;} /* Missing course modules message on top of the rubric in edit form */
-.generalbox .missingmodule {padding:20px 5px 10px 5px; background: transparent url([[pix:i/risk_xss]]) no-repeat center top;} /* Missing course modules message on top of the rubric in preview form */
-.generalbox .missingmodule p {text-align: center;}
+.gradingform_erubric .enrichedcriterion .missingmodule {background: transparent url([[pix:i/risk_xss]]) no-repeat left;border:1px dashed #F00;padding-left: 25px;} /* Missing course modules message on top of the rubric in edit form */
+.gradingform_erubric-error, /* Message during evaluation if a criterion does not have a level checked */
+.gradingform_erubric-regrade, /* Regrade message box on top */
+.generalbox .missingmodule {padding:20px 5px 10px 5px;margin-bottom: 10px;background: #F7F0F0 url([[pix:i/risk_xss]]) no-repeat center 5px;border:1px dashed #F00;} /* Missing course modules message on top of the rubric in preview form */
+.generalbox .missingmodule p {text-align: center;margin:0px;}
 .box.gradingform_erubric-description,
-.generalbox.rubricmappingexplained {padding: 5px; max-width: 95%;} /* Expanation message about final grade calculations on rubric preview above the rubric */
+.generalbox.rubricmappingexplained {padding: 5px;} /* Explanation message about final grade calculations on rubric preview above the rubric */
 
-.gradingform_erubric .criterion .levels.error { border:1px solid red;} /* Marking of the hole levels line of a criterion, when there are not enough number of criterion levels created */
+.gradingform_erubric .criterion .levels.error { border:1px dashed #F00;} /* Marking of the hole levels line of a criterion, when there are not enough number of criterion levels created */
 .gradingform_erubric .criterion .description.error,
 .gradingform_erubric .criterion .levels .level .definition.error,
 .gradingform_erubric .criterion .levels .level .score.error {background:#FFDDDD;} /* Missing value or definition from basic rubric criterion or levels */
 
-.gradingform_erubric-regrade {max-width: 91%;padding:5px 5px 5px 30px;border:1px solid #F00;margin-bottom:10px;background:#F7F0F0 url([[pix:i/risk_xss]]) no-repeat 5px;} /* Regrade message box */
-.gradingform_erubric-restored {max-width: 95%;padding:10px;background:#FFFFDD;border:1px solid #FF0;margin-bottom:10px;} /* Restored rubric message box */
-.gradingform_erubric-error {max-width: 95%;padding:5px 5px 5px 30px;border:1px solid #F00;margin-bottom:10px;background:#F7F0F0 url([[pix:i/risk_xss]]) no-repeat 5px;} /* Message during evaluation if a criterion does not have a level checked */
-.felement.f.error {color: initial;} /* Don't color red the text in all the form */
+.gradingform_erubric-restored {padding:10px;background:#FFFFDD;border:1px dashed #FF0;margin-bottom:10px;} /* Restored rubric message box */
+.felement.f.error {color: initial;} /* Don't colour red the text in all the form */
 .felement.f.error  br,
 .felement.f.error .error {display:none;} /* These are needed so that the 'gradingform_erubric-error' above could be displayed correctly */
 
@@ -256,6 +258,70 @@
 
 /* Special adjustments for better display of the form in Greek */
 .gradingform_erubric.hellenic .enrichedcriterion .rich .modulecontainer {width: 165px;}
-.gradingform_erubric_editform.hellenic .fitemtitle {width:130px !important;padding-top:0px !important;} /* Importance needed to fit the form into page width. */
-.gradingform_erubric_editform.hellenic .felement {margin-left:140px !important;} /* Importance needed to fit the form into page width. */
+.gradingform_erubric_editform.hellenic.clean_theme .fitemtitle,
+.gradingform_erubric_editform.hellenic.more_theme .fitemtitle {width:130px !important;padding-top:0px !important;} /* Importance needed to fit the form into page width. */
+.clean_theme .gradingform_erubric_editform.hellenic .felement,
+.more_theme.gradingform_erubric_editform.hellenic .felement {margin-left:140px !important;} /* Importance needed to fit the form into page width. NO FOR BOOST_THEME*/
+.gradingform_erubric_editform.hellenic.boost_theme .gradingform_erubric.hellenic .enrichedcriterion .enriched-wrapper {width: 206px;} /* BOOST Theme */
+.gradingform_erubric_editform.hellenic.boost_theme .gradingform_erubric.hellenic .enrichedcriterion .rich .modulecontainer {width: 177px;} /* BOOST Theme */
+.gradingform_erubric_editform.hellenic.boost_theme .gradingform_erubric.hellenic .enrichedcriterion .rich .modulecontainer .nameoverflowedit {max-width: 130px;} /* BOOST Theme */
+.boost_theme .gradingform_erubric .criterion .description {width:180px;font-weight:bold;} /* BOOST Theme */
 .gradingform_erubric_editform.hellenic .gradingform_erubric.hellenic .enrichedcriterion .rich .modulecontainer {width: 169px;}
+
+/* Special adjustments for better display of the form using Boost Theme */
+.gradingform_erubric_editform.boost_theme.mform>.form-group {margin-left: -15px;}
+.boost_theme .gradingform_erubric.editor .criterion .levels .level .delete {margin-top:10px;}
+.boost_theme .gradingform_erubric.editor .enrichedcriterion .coursemodule .delete input {margin-left:5px; vertical-align:middle;}
+.boost_theme .gradingform_erubric .enrichedcriterion .rich select {padding-top: 1px;}
+    @media (max-width: 575px) {
+        .gradingform_erubric_editform.boost_theme .options .option label {display: unset;}
+    }
+
+/* Special adjustments for better display of the form using Clean Theme */
+.gradingform_erubric_editform.clean_theme .fitemtitle {width:190px !important;} /* Importance needed to fit the form into page width. */
+.gradingform_erubric_editform.clean_theme .fitem_feditor,
+.gradingform_erubric_editform.clean_theme .fitem_f {margin-right: 10px;}
+
+/* Special adjustments for better display of the form using More Theme */
+.gradingform_erubric_editform.more_theme.mform {overflow: auto;}
+.gradingform_erubric_editform.more_theme .felement.feditor {max-width:290px !important;}
+.gradingform_erubric.more_theme.view,
+.gradingform_erubric.more_theme.editor.preview {width: 200px;}
+.box.definition-preview .gradingform_erubric.more_theme.editor.preview {width: 100%;}
+
+@media (min-width: 576px) {
+    .gradingform_erubric_editform.boost_theme.mform fieldset,
+    .gradingform_erubric_editform.boost_theme.mform>.form-group {margin-left: unset;}
+    .gradingform_erubric_editform.boost_theme #fitem_id_erubric .felement {margin-left: 15px;} /* Importance needed to fit the form into page width. */
+    .gradingform_erubric_editform.boost_theme .fitemtitle {margin-left: 15px;} /* Importance needed to fit the form into page width. */
+    .gradingform_erubric_editform.boost_theme .options .option label {display: inline-block;}
+
+    .gradingform_erubric_editform.more_theme .felement.feditor {max-width:490px !important;}
+    .gradingform_erubric.more_theme.view {width: 400px;}
+    .gradingform_erubric.more_theme.editor.preview {width: 400px;}
+}
+
+@media (min-width: 992px) {
+    .gradingform_erubric_editform.more_theme .felement.feditor {max-width:650px !important;} /* Importance needed to fit the editor into page width. */
+    .gradingform_erubric.more_theme.view {width: 570px;}
+    .gradingform_erubric.more_theme.editor.preview {width: 570px;}
+}
+
+@media (min-width: 1200px) {
+    .gradingform_erubric_editform.clean_theme .felement {margin-left:200px !important;} /* Importance needed to fit the form into page width. */
+
+    .gradingform_erubric_editform.more_theme .fitemtitle {width:190px !important;}
+    .gradingform_erubric_editform.more_theme .felement {margin-left:205px !important;} /* Importance needed to fit the form into page width. */
+    .gradingform_erubric.more_theme.view {width: 720px;}
+    .gradingform_erubric.more_theme.editor.preview {width: 720px;}
+}
+
+@media (min-width: 1440px) {
+    .gradingform_erubric.more_theme.view {width: 850px;}
+    .gradingform_erubric.more_theme.editor.preview {width: 850px;}
+}
+
+@media (min-width: 2560px) {
+    .gradingform_erubric.more_theme.view {width: 1050px;}
+    .gradingform_erubric.more_theme.editor.preview {width: 1050px;}
+}

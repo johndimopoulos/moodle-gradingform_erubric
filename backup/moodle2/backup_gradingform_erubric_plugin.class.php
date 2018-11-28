@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -18,8 +17,8 @@
 /**
  * Support for backup API
  *
- * @package    gradingform
- * @subpackage Learinng Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform_erubric
+ * @name       Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -101,12 +100,16 @@ class backup_gradingform_erubric_plugin extends backup_gradingform_plugin {
         $pluginwrapper->add_child($efillings);
         $efillings->add_child($efilling);
 
-        // Set sources to populate the data
-        $efilling->set_source_table('gradingform_erubric_fillings',
-            array('instanceid' => backup::VAR_PARENTID));
+        // Binding criterionid to ensure it's existence
+        $efilling->set_source_sql('SELECT rf.*
+                FROM {gradingform_erubric_fillings} rf
+                JOIN {grading_instances} gi ON gi.id = rf.instanceid
+                JOIN {gradingform_erubric_criteria} rc ON rc.id = rf.criterionid AND gi.definitionid = rc.definitionid
+                WHERE rf.instanceid = :instanceid',
+                array('instanceid' => backup::VAR_PARENTID));
 
         // No need to annotate ids or files yet (one day when remark field supports
-        // embedded fileds, they must be annotated here).
+        // embedded files, they must be annotated here).
 
         return $plugin;
     }

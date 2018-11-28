@@ -17,8 +17,8 @@
 /**
  * File contains definition of class MoodleQuickForm_erubriceditor
  *
- * @package    gradingform
- * @subpackage Learinng Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform_erubric
+ * @name       Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -38,17 +38,17 @@ require_once("HTML/QuickForm/input.php");
  * If Javascript is disabled when one of those special buttons is pressed, the form
  * element is not validated and, instead of submitting the form, we process button presses.
  *
- * @package    gradingform
- * @subpackage Learinng Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform_erubric
+   @name       Learinng Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
-    /** @var string Help message */
+    /** @var string help message */
     public $_helpbutton = '';
-    /** @var string|bool Stores the result of the last validation: null - undefined, false - no errors, string - error(s) text. */
+    /** @var string|bool stores the result of the last validation: null - undefined, false - no errors, string - error(s) text. */
     protected $validationerrors = null;
-    /** @var bool If the element has already been validated. **/
+    /** @var bool if the element has already been validated. **/
     protected $wasvalidated = false;
     /** @var bool If non-submit (JS) button was pressed: null - unknown, true/false - button was/wasn't pressed. */
     protected $nonjsbuttonpressed = false;
@@ -62,26 +62,24 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
      * @param string $elementLabel
      * @param array $attributes
      */
-    function MoodleQuickForm_erubriceditor($elementName=null, $elementLabel=null, $attributes=null) {
-        parent::HTML_QuickForm_input($elementName, $elementLabel, $attributes);
+    public function __construct($elementName=null, $elementLabel=null, $attributes=null) {
+        parent::__construct($elementName, $elementLabel, $attributes);
     }
 
     /**
-     * Set html for help button.
+     * Old syntax of class constructor. Deprecated in PHP7.
      *
-     * @access   public
-     * @param array $help array of arguments to make a help button
-     * @param string $function function name to call to get html
+     * @deprecated since Moodle 3.1
      */
-    public function setHelpButton($helpbuttonargs, $function='helpbutton'){
-        debugging('component setHelpButton() is not used any more, please use $mform->setHelpButton() instead');
+    public function MoodleQuickForm_erubriceditor($elementName=null, $elementLabel=null, $attributes=null) {
+        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
+        self::__construct($elementName, $elementLabel, $attributes);
     }
 
     /**
      * Get html for help button.
      *
-     * @access   public
-     * @return  string html for help button
+     * @return string html for help button
      */
     public function getHelpButton() {
         return $this->_helpbutton;
@@ -136,7 +134,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                                                array('enrichedvaluesuffixpoints', 'gradingform_erubric'), array('enrichedvaluesuffixnothing', 'gradingform_erubric'),
                                                array('enrichedvaluesuffixstudents', 'gradingform_erubric'), array('enrichedvaluesuffixfiles', 'gradingform_erubric'))
                             );
-            // Define and engade the js class from the js file.
+            // Define and engage the js class from the js file.
             $PAGE->requires->js_init_call('M.gradingform_erubriceditor.init', array(
                 array('name' => $this->getName(),
                     'criteriontemplate' => $renderer->criterion_template($mode, $data['options'], $this->getName()),
@@ -168,9 +166,8 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
             $html .= $renderer->display_regrade_confirmation($this->getName(), $this->regradeconfirmation, $data['regrade']);
         }
         if ($this->validationerrors) { // Display validation errors.
-            $html .= $renderer->notification($this->validationerrors, 'errormessage');
+            $html .= html_writer::div($renderer->notification($this->validationerrors));
         }
-
         $html .= $renderer->display_erubric($data['criteria'], $data['options'], $mode, $this->getName());
         return $html;
     }
@@ -214,7 +211,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
             }
         }
         if (is_array($value)) {
-            // For other array keys of $value no special treatmeant neeeded, copy them to return value as is.
+            // For other array keys of $value no special treatment needed, copy them to return value as is.
             foreach (array_keys($value) as $key) {
                 if ($key != 'options' && $key != 'criteria') {
                     $return[$key] = $value[$key];
@@ -225,7 +222,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
         // Iterate through criteria.
         $lastaction = null;
         $lastid = null;
-
+        $overallminscore = $overallmaxscore = 0;
         foreach ($value['criteria'] as $id => $criterion) {
 
             // Check if user pressed the 'add criterion' button and take appropriate actions...
@@ -244,8 +241,8 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                     $criterion['levels']['NEWID'.($i++)]['score'] = 0;
                 }
 
-                // Add more levels so there are at least 3 in the new criterion. Increment by 1 the score for each next one.
-                for ($i=$i; $i<3; $i++) {
+                // Add more levels so there are at least 2 in the new criterion. Increment by 1 the score for each next one.
+                for ($i=$i; $i<2; $i++) {
                     $criterion['levels']['NEWID'.$i]['score'] = $criterion['levels']['NEWID'.($i-1)]['score'] + 1;
                 }
                 // Set other necessary fields (definition) for the levels in the new criterion.
@@ -258,7 +255,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
             // Enrichement criteria needed for evaluation.
             $allrichcriteria = array('criteriontype', 'coursemodules', 'activity', 'resource', 'assignment', 'operator', 'referencetype');
             $levels = array();
-            $maxscore = null;
+            $minscore = $maxscore = null;
             if (array_key_exists('levels', $criterion)) {
 
                 /**
@@ -269,7 +266,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                  *    ie. we can't accept resource modules for assignment(grade) check. We can only accept assignment modules!
                  *    This should work all by itself when javascript is enabled! :)
                  * 3.a If collaboration is checked as the criterion type, collaboration type must be also checked.
-                 * 3.b if file submissions or forum replies are checked as collaboration type, chat course modules can't be choosen.
+                 * 3.b if file submissions or forum replies are checked as collaboration type, chat course modules can't be chosen.
                 */
 
                 //****CHECK FOR RULE NO.1****//
@@ -292,7 +289,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                 if ($richcriteriaselected) {
 
                     // Get enriched criterion type.
-                    // If criterion type selected, Rule No.2 is proccessed...
+                    // If criterion type selected, Rule No.2 is processed...
                     //****CHECK FOR RULE NO.2****//
                     if (array_key_exists('criteriontype', $criterion) && $criterion['criteriontype']){
                         $criteriontype = $criterion['criteriontype'];
@@ -350,7 +347,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                             unset($allrichcriteria[$tempid]); // Don't need them any more.
                         }
 
-                        // If collaboration criterion type is selected, Rule No.3 is proccessed...
+                        // If collaboration criterion type is selected, Rule No.3 is processed...
                         // Check 3.a first...
                         //****CHECK FOR RULE NO.3.a****//
                         if ($criterion['criteriontype']== gradingform_erubric_controller::INTERACTION_TYPE_COLLABORATION){
@@ -402,7 +399,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                                 unset($allrichcriteria[$tempid]); //don't need them any more
                             }
 
-                        // Else if at least one simple course module select is selected trick the procedure bellow
+                        // Else if at least one simple course module select is selected, trick the procedure bellow
                         // so that coursemodules array is ok... ;)
                         }else{
                             foreach ($enrichedcriteriontypes as $type=>$valueid){
@@ -448,7 +445,8 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                     unset($criterion['deletemodule']); // Don't need it any more...
                     $this->nonjsbuttonpressed = true;
                 }
-
+                $uniquelevelscores = array();
+                $uniquelevelvalues = array();
                 // Iterate through levels...
                 foreach ($criterion['levels'] as $levelid => $level) {
 
@@ -461,41 +459,59 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                         );
 
                         foreach ($criterion['levels'] as $lastlevel) {
-                            if (isset($lastlevel['score']) && $level['score'] < $lastlevel['score'] + 1) {
-                                $level['score'] = $lastlevel['score'] + 1;
+                            if (isset($lastlevel['score'])) {
+                                $level['score'] = max($level['score'], ceil(unformat_float($lastlevel['score'])) + 1);
                             }
                         }
                         $this->nonjsbuttonpressed = true;
                     }
 
                     if (!array_key_exists('delete', $level)) {
+                        $score = unformat_float($level['score'], true);
                         if ($withvalidation) {
                             if (!strlen(trim($level['definition']))) {
                                 $errors['err_nodefinition'] = 1;
                                 $level['error_definition'] = true;
                             }
-                            if ((!strlen(trim($level['score']))) || (!preg_match('#^[\+]?\d*$#', trim($level['score'])))) { // Only positive integers.
+                            if ($score === null || $score === false) {
                                 $errors['err_scoreformat'] = 1;
                                 $level['error_score'] = true;
+                            }
+                            if (!empty($uniquelevelscores) && in_array($score, $uniquelevelscores)) {
+                                $errors['err_novariationspoints'] = 1;
+                                $level['error_score'] = true;
+                            } else {
+                                $uniquelevelscores[] = $score;
                             }
 
                             // If this criterion is enriched, check the enriched level value.
                             if ($richcriteriaselected){
+                                $evalue = trim($level['enrichedvalue']);
                                 // If enriched value missing, establish the error.
-                                if (!strlen(trim($level['enrichedvalue']))) {
+                                if (!strlen($evalue)) {
                                     $errors['err_enrichedvaluemissing'] = 1;
-                                    $level['error_enrichedvaluemissing'] = true;
+                                    $level['error_enrichedvalue'] = true;
 
-                                // If enriched value is anything but a possitive integer number, establish the error.
-                                }else if (!preg_match('#^[\+]?\d*$#', trim($level['enrichedvalue']))) { // Remove check for decimals. We only want integers -- && !preg_match('#^[\+]?\d*[\.,]\d+$#', trim($level['enrichedvalue'])) --
+                                // If enriched value is anything but a positive integer number, establish the error.
+                                }else if (!preg_match('#^[\+]?\d*$#', $evalue)) { // Remove check for decimals. We only want integers -- && !preg_match('#^[\+]?\d*[\.,]\d+$#', $evalue) --
                                     $errors['err_enrichedvalueformat'] = 1;
-                                    $level['error_enrichedvalueformat'] = true;
+                                    $level['error_enrichedvalue'] = true;
+                                }
+                                // If enriched value is the same as another in the same criterion, establish the error.
+                                if (!empty($uniquelevelvalues) && in_array($evalue, $uniquelevelvalues)) {
+                                    $errors['err_novariationsvalues'] = 1;
+                                    $level['error_enrichedvalue'] = true;
+                                } else {
+                                    $uniquelevelvalues[] = $evalue;
                                 }
                             }
                         }
                         $levels[$levelid] = $level;
-                        if ($maxscore === null || (float)$level['score'] > $maxscore) {
-                            $maxscore = (float)$level['score'];
+                        if ($minscore === null || $score < $minscore) {
+                            $minscore = $score;
+                        }
+                        if ($maxscore === null || $score > $maxscore) {
+                            $maxscore = $score;
                         }
                     } else {
                         $this->nonjsbuttonpressed = true;
@@ -515,6 +531,8 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                     $errors['err_nodescription'] = 1;
                     $criterion['error_description'] = true;
                 }
+                $overallmaxscore += $maxscore;
+                $overallminscore += $minscore;
             }
 
             // Check if user pressed the 'move up criterion' button and take appropriate actions...
@@ -558,7 +576,12 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
 
         // Create validation error string (if needed).
         if ($withvalidation) {
-            if (!empty($errors)) {
+            if (!$return['options']['lockzeropoints']) {
+                if ($overallminscore == $overallmaxscore) {
+                    $errors['err_novariations'] = 1;
+                }
+            }
+            if (count($errors)) {
                 $rv = array();
                 $prefix = '';
                 if (count($errors)>1) $prefix = '&bull;&nbsp;';
@@ -624,7 +647,6 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
     /**
      * Prepares the data for saving
      * @see prepare_data()
-     *
      * @param array $submitValues
      * @param boolean $assoc
      * @return array
