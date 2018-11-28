@@ -44,8 +44,6 @@ require_once("HTML/QuickForm/input.php");
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
-    /** @var string help message */
-    public $_helpbutton = '';
     /** @var string|bool stores the result of the last validation: null - undefined, false - no errors, string - error(s) text. */
     protected $validationerrors = null;
     /** @var bool if the element has already been validated. **/
@@ -54,45 +52,6 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
     protected $nonjsbuttonpressed = false;
     /** @var bool Message to display in front of the editor (that student evaluation has occured on this enriched rubric being edited). */
     protected $regradeconfirmation = false;
-
-    /**
-     * Constructor for rubric editor
-     *
-     * @param string $elementName
-     * @param string $elementLabel
-     * @param array $attributes
-     */
-    public function __construct($elementName=null, $elementLabel=null, $attributes=null) {
-        parent::__construct($elementName, $elementLabel, $attributes);
-    }
-
-    /**
-     * Old syntax of class constructor. Deprecated in PHP7.
-     *
-     * @deprecated since Moodle 3.1
-     */
-    public function MoodleQuickForm_erubriceditor($elementName=null, $elementLabel=null, $attributes=null) {
-        debugging('Use of class name as constructor is deprecated', DEBUG_DEVELOPER);
-        self::__construct($elementName, $elementLabel, $attributes);
-    }
-
-    /**
-     * Get html for help button.
-     *
-     * @return string html for help button
-     */
-    public function getHelpButton() {
-        return $this->_helpbutton;
-    }
-
-    /**
-     * The renderer will take care itself about different display in normal and frozen states.
-     *
-     * @return string
-     */
-    public function getElementTemplateType() {
-        return 'default';
-    }
 
     /**
      * Specifies that confirmation about re-grading needs to be added to this enriched rubric editor.
@@ -110,7 +69,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
      *
      * @return string
      */
-    public function toHtml() {
+    public function tohtml() {
         global $PAGE;
         $html = $this->_getTabs();
         $renderer = $PAGE->get_renderer('gradingform_erubric');
@@ -118,8 +77,8 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
         if (!$this->_flagFrozen) {
             $mode = gradingform_erubric_controller::DISPLAY_EDIT_FULL;
             // Module constants to be used in the javascript include file.
-            $module = array('name'=>'gradingform_erubriceditor',
-                            'fullpath'=>'/grade/grading/form/erubric/js/erubriceditor.js',
+            $module = array('name' => 'gradingform_erubriceditor',
+                            'fullpath' => '/grade/grading/form/erubric/js/erubriceditor.js',
                             'requires' => array('base', 'dom', 'event', 'event-touch', 'escape'),
                             'strings' => array(array('confirmdeletecriterion', 'gradingform_erubric'), array('confirmdeletelevel', 'gradingform_erubric'),
                                                array('criterionempty', 'gradingform_erubric'), array('levelempty', 'gradingform_erubric'),
@@ -242,8 +201,8 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                 }
 
                 // Add more levels so there are at least 2 in the new criterion. Increment by 1 the score for each next one.
-                for ($i=$i; $i<2; $i++) {
-                    $criterion['levels']['NEWID'.$i]['score'] = $criterion['levels']['NEWID'.($i-1)]['score'] + 1;
+                for ($i = $i; $i < 2; $i++) {
+                    $criterion['levels']['NEWID'.$i]['score'] = $criterion['levels']['NEWID'.($i - 1)]['score'] + 1;
                 }
                 // Set other necessary fields (definition) for the levels in the new criterion.
                 foreach (array_keys($criterion['levels']) as $i) {
@@ -258,73 +217,71 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
             $minscore = $maxscore = null;
             if (array_key_exists('levels', $criterion)) {
 
-                /**
-                 * Enrichment checks are conducted if this ($id & $criterion) is a rubric criterion (so it must have levels).
-                 * These are the rules:
-                 * 1. If one enrichment criterion is selected, all must be.
-                 * 2. All course modules should be checked according to criterion type,
-                 *    ie. we can't accept resource modules for assignment(grade) check. We can only accept assignment modules!
-                 *    This should work all by itself when javascript is enabled! :)
-                 * 3.a If collaboration is checked as the criterion type, collaboration type must be also checked.
-                 * 3.b if file submissions or forum replies are checked as collaboration type, chat course modules can't be chosen.
-                */
+                 // Enrichment checks are conducted if this ($id & $criterion) is a rubric criterion (so it must have levels).
+                 // These are the rules:
+                 // 1. If one enrichment criterion is selected, all must be.
+                 // 2. All course modules should be checked according to criterion type,
+                 //    ie. we can't accept resource modules for assignment(grade) check. We can only accept assignment modules!
+                 //    This should work all by itself when javascript is enabled! :)
+                 // 3.a If collaboration is checked as the criterion type, collaboration type must be also checked.
+                 // 3.b if file submissions or forum replies are checked as collaboration type, chat course modules can't be chosen.
 
-                //****CHECK FOR RULE NO.1****//
+                // ...****CHECK FOR RULE NO.1****...
                 // Preliminary test needed for further evaluation...
                 $richcriteriaselected = false;
 
                 foreach ($allrichcriteria as $richcriterion) {
-                    if (array_key_exists($richcriterion, $criterion) && $criterion[$richcriterion]){
+                    if (array_key_exists($richcriterion, $criterion) && $criterion[$richcriterion]) {
                         $richcriteriaselected = true;
                         break;
                     }
                 }
 
-                // Get defined enriched criterion types from lib.php
-                $enrichedcriteriontypes = array('activity'=>gradingform_erubric_controller::INTERACTION_TYPE_COLLABORATION,
-                                                'assignment'=>gradingform_erubric_controller::INTERACTION_TYPE_GRADE,
-                                                'resource'=>gradingform_erubric_controller::INTERACTION_TYPE_STUDY);
+                // Get defined enriched criterion types from lib.php!
+                $enrichedcriteriontypes = array('activity' => gradingform_erubric_controller::INTERACTION_TYPE_COLLABORATION,
+                                                'assignment' => gradingform_erubric_controller::INTERACTION_TYPE_GRADE,
+                                                'resource' => gradingform_erubric_controller::INTERACTION_TYPE_STUDY);
 
-                // Further enrichment evaluation for RULE NO.1
+                // Further enrichment evaluation for RULE NO.1!
                 if ($richcriteriaselected) {
 
                     // Get enriched criterion type.
                     // If criterion type selected, Rule No.2 is processed...
-                    //****CHECK FOR RULE NO.2****//
-                    if (array_key_exists('criteriontype', $criterion) && $criterion['criteriontype']){
+                    // ...****CHECK FOR RULE NO.2****...
+                    if (array_key_exists('criteriontype', $criterion) && $criterion['criteriontype']) {
                         $criteriontype = $criterion['criteriontype'];
                         $selectedmodulestype = null;
 
                         // Check if there are any selected modules and get their type.
-                        if (array_key_exists('coursemodules', $criterion) && is_array($criterion['coursemodules']) && $criterion['coursemodules']){
-                            foreach ($criterion['coursemodules'] as $moduletype=>$values){
+                        if (array_key_exists('coursemodules', $criterion) && is_array($criterion['coursemodules']) && $criterion['coursemodules']) {
+                            foreach ($criterion['coursemodules'] as $moduletype=>$values) {
                                 $selectedmodulestype = $moduletype;
                                 break;
                             }
                         }
 
                         // If the selected course modules are not of the same type, establish the error.
-                        if ($selectedmodulestype && $enrichedcriteriontypes[$selectedmodulestype]!=$criteriontype){
+                        if ($selectedmodulestype && $enrichedcriteriontypes[$selectedmodulestype]!=$criteriontype) {
                             $errors['err_enrichedmoduleselection'][$id] = 1;
                             $criterion['error_coursemodules'] = true;
                         }
 
                         // If there are no course modules selected...
-                        if ($selectedmodulestype==null){
-                            foreach ($enrichedcriteriontypes as $type=>$valueid){
-                                if ($valueid==$criteriontype) {
+                        if ($selectedmodulestype == null) {
+                            foreach ($enrichedcriteriontypes as $type => $valueid) {
+                                if ($valueid == $criteriontype) {
                                     $selectedmodulestype = $type;
                                     break;
                                 }
                             }
                         }
 
-                        // Check if a simple module select field of the same type is selected and then
-                        // update coursemodules array and remove possible error notice.
-                        if(array_key_exists($selectedmodulestype, $criterion) && $criterion[$selectedmodulestype]){
+                        // Check if a simple module select field of the same type is selected and then...
+                        // ...update coursemodules array and remove possible error notice.
+                        if(array_key_exists($selectedmodulestype, $criterion) && $criterion[$selectedmodulestype]) {
 
                             // If previous modules where not of the same kind, reset them and establish new coursemodules array.
-                            if (array_key_exists('err_enrichedmoduleselection', $errors) && $errors['err_enrichedmoduleselection'][$id]){
+                            if (array_key_exists('err_enrichedmoduleselection', $errors) && $errors['err_enrichedmoduleselection'][$id]) {
                                 $criterion['coursemodules'] = array($selectedmodulestype=>array($criterion[$selectedmodulestype]));
                                 unset($errors['err_enrichedmoduleselection'][$id]);
                                 unset($criterion['error_coursemodules']);
@@ -332,7 +289,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                             // If the course modules array has appropriate values, or is empty...
                             }else{
                                 // If course modules array exists...
-                                if (array_key_exists('coursemodules', $criterion) && is_array($criterion['coursemodules']) && $criterion['coursemodules']){
+                                if (array_key_exists('coursemodules', $criterion) && is_array($criterion['coursemodules']) && $criterion['coursemodules']) {
                                     array_push($criterion['coursemodules'][$selectedmodulestype], $criterion[$selectedmodulestype]);
                                 // If course modules array is null...
                                 }else{
@@ -342,15 +299,15 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                         }
 
                         // Reset simple selects.
-                        foreach ($enrichedcriteriontypes as $type=>$valueid){
+                        foreach ($enrichedcriteriontypes as $type=>$valueid) {
                             $tempid = array_search($type, $allrichcriteria);
                             unset($allrichcriteria[$tempid]); // Don't need them any more.
                         }
 
                         // If collaboration criterion type is selected, Rule No.3 is processed...
                         // Check 3.a first...
-                        //****CHECK FOR RULE NO.3.a****//
-                        if ($criterion['criteriontype']== gradingform_erubric_controller::INTERACTION_TYPE_COLLABORATION){
+                        // ...****CHECK FOR RULE NO.3.a****...
+                        if ($criterion['criteriontype']== gradingform_erubric_controller::INTERACTION_TYPE_COLLABORATION) {
 
                             // If collaboration type is not selected, establish the error.
                             if (!array_key_exists('collaborationtype', $criterion) || !$criterion['collaborationtype']) {
@@ -358,10 +315,10 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                                 $criterion['error_collaborationtype'] = true;
 
                             // Check 3.b as long as 3.a is ok, and there are course modules selected.
-                            //****CHECK FOR RULE NO.3.b****//
+                            // ...****CHECK FOR RULE NO.3.b****...
                             }else if (array_key_exists('coursemodules', $criterion) && !array_key_exists('error_coursemodules', $criterion) &&
                                       ($criterion['collaborationtype'] == gradingform_erubric_controller::COLLABORATION_TYPE_FILE_ADDS ||
-                                       $criterion['collaborationtype'] == gradingform_erubric_controller::COLLABORATION_TYPE_REPLIES)){
+                                       $criterion['collaborationtype'] == gradingform_erubric_controller::COLLABORATION_TYPE_REPLIES)) {
 
                                 $temparray = array();
                                 if (is_array($criterion['coursemodules'][$selectedmodulestype][0])) { // Already saved criterion.
@@ -372,11 +329,11 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
 
                                 GLOBAL $PAGE;
                                 $renderer = $PAGE->get_renderer('gradingform_erubric');
-                                foreach ($temparray as $mdlinstance){
+                                foreach ($temparray as $mdlinstance) {
                                     $tempinstance = explode('->', $mdlinstance);
                                     $moduletype = (int)$tempinstance[0];
                                     // If there are any chat course modules selected establish the error.
-                                    if ($moduletype==$renderer->chatmoduleid){
+                                    if ($moduletype==$renderer->chatmoduleid) {
                                         $errors['err_collaborationhoice'][$id] = 1;
                                         $criterion['error_collaborationmodules'] = true;
                                     }
@@ -392,22 +349,22 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
 
                     }else{ // Even if the criterion type is not selected, handle the course modules.
 
-                        // If course modules are selected, don't check simple course modules selects
-                        if (array_key_exists('coursemodules', $criterion)){
-                            foreach ($enrichedcriteriontypes as $type=>$valueid){
+                        // If course modules are selected, don't check simple course modules selects.
+                        if (array_key_exists('coursemodules', $criterion)) {
+                            foreach ($enrichedcriteriontypes as $type => $valueid) {
                                 $tempid = array_search($type, $allrichcriteria);
-                                unset($allrichcriteria[$tempid]); //don't need them any more
+                                unset($allrichcriteria[$tempid]); // Don't need them any more!
                             }
 
-                        // Else if at least one simple course module select is selected, trick the procedure bellow
-                        // so that coursemodules array is ok... ;)
+                        // Else if at least one simple course module select is selected, trick the procedure bellow...
+                        // ...so that coursemodules array is ok... ;)
                         }else{
-                            foreach ($enrichedcriteriontypes as $type=>$valueid){
+                            foreach ($enrichedcriteriontypes as $type => $valueid) {
                                 $tempid = array_search($type, $allrichcriteria);
-                                unset($allrichcriteria[$tempid]); // Don't need it any more...
-                                if (array_key_exists($type, $criterion) && array_key_exists('coursemodules', $allrichcriteria)){
+                                unset($allrichcriteria[$tempid]); // Don't need it any more!
+                                if (array_key_exists($type, $criterion) && array_key_exists('coursemodules', $allrichcriteria)) {
                                     $tempid = array_search('coursemodules', $allrichcriteria);
-                                    unset($allrichcriteria[$tempid]); // Don't need it any more...
+                                    unset($allrichcriteria[$tempid]); // Don't need it any more!
                                 }
                             }
                         }
@@ -415,30 +372,30 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
 
                     // First check main enriched criteria.
                     foreach ($allrichcriteria as $richcriterion) {
-                        if (empty($criterion[$richcriterion])){
+                        if (empty($criterion[$richcriterion])) {
                             $errors['err_enrichedcriterionmissing'][$id] = 1;
                             $criterion['error_'.$richcriterion] = true;
                         }
                     }
                 }
 
-                // If javascript is disabled thus nonjsbuttonpressed and user pressed a deletemodule button,
-                // remove the appropriate course module from the appropriate criterion.
-                // The deletemodules value is string that can give us these data when exploded:
-                // 0=>[rubricname] , 1=>['criteria'] , 2=>[criterionid] , 3=>[moduletype] , 4=>[moduleid] , 5=>[moduleinstanceid]
+                // If javascript is disabled thus nonjsbuttonpressed and user pressed a deletemodule button...
+                // ...remove the appropriate course module from the appropriate criterion.
+                // The deletemodules value is string that can give us these data when exploded...
+                // 0=>[rubricname] , 1=>['criteria'] , 2=>[criterionid] , 3=>[moduletype] , 4=>[moduleid] , 5=>[moduleinstanceid]!
                 if (array_key_exists('deletemodule', $criterion)) {
 
                     $criterionwithmodule = explode('-', $criterion['deletemodule']);
 
                     // Remove the module.
                     foreach($criterion['coursemodules'][$criterionwithmodule[3]] as $key=>$valueid) {
-                        if ($valueid==$criterionwithmodule[4].'->'.$criterionwithmodule[5]){
+                        if ($valueid==$criterionwithmodule[4].'->'.$criterionwithmodule[5]) {
                             unset($criterion['coursemodules'][$criterionwithmodule[3]][$key]);
                         }
                     }
 
                     // If the last module is deleted, delete the entire coursemodules array.
-                    if (count($criterion['coursemodules'][$criterionwithmodule[3]])==0){
+                    if (count($criterion['coursemodules'][$criterionwithmodule[3]])==0) {
                         unset($criterion['coursemodules']);
                     }
 
@@ -485,7 +442,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                             }
 
                             // If this criterion is enriched, check the enriched level value.
-                            if ($richcriteriaselected){
+                            if ($richcriteriaselected) {
                                 $evalue = trim($level['enrichedvalue']);
                                 // If enriched value missing, establish the error.
                                 if (!strlen($evalue)) {
@@ -493,7 +450,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                                     $level['error_enrichedvalue'] = true;
 
                                 // If enriched value is anything but a positive integer number, establish the error.
-                                }else if (!preg_match('#^[\+]?\d*$#', $evalue)) { // Remove check for decimals. We only want integers -- && !preg_match('#^[\+]?\d*[\.,]\d+$#', $evalue) --
+                                }else if (!preg_match('#^[\+]?\d*$#', $evalue)) {
                                     $errors['err_enrichedvalueformat'] = 1;
                                     $level['error_enrichedvalue'] = true;
                                 }

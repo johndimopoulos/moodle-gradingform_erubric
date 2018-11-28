@@ -50,23 +50,23 @@ class gradingform_erubric_editrubric extends moodleform {
         $form->addElement('hidden', 'returnurl');
         $form->setType('returnurl', PARAM_LOCALURL);
 
-        // Name
+        /* Name */
         $form->addElement('text', 'name', get_string('name', 'gradingform_erubric'), array('size' => 52, 'aria-required' => 'true'));
         $form->addRule('name', get_string('required'), 'required', null, 'client');
         $form->setType('name', PARAM_TEXT);
 
-        // Description
+        /* Description */
         $options = gradingform_erubric_controller::description_form_field_options($this->_customdata['context']);
         $form->addElement('editor', 'description_editor', get_string('description', 'gradingform_erubric'), null, $options);
         $form->setType('description_editor', PARAM_RAW);
 
-        // Enriched rubric completion status
+        /* Enriched rubric completion status */
         $choices = array();
         $choices[gradingform_controller::DEFINITION_STATUS_DRAFT]    = html_writer::tag('span', get_string('statusdraft', 'core_grading'), array('class' => 'status draft'));
         $choices[gradingform_controller::DEFINITION_STATUS_READY]    = html_writer::tag('span', get_string('statusready', 'core_grading'), array('class' => 'status ready'));
         $form->addElement('select', 'status', get_string('rubricstatus', 'gradingform_erubric'), $choices)->freeze();
 
-        // Enriched rubric editor
+        /* Enriched rubric editor */
         $element = $form->addElement('erubriceditor', 'erubric', get_string('erubric', 'gradingform_erubric'));
         $form->setType('erubric', PARAM_RAW);
 
@@ -101,7 +101,7 @@ class gradingform_erubric_editrubric extends moodleform {
         } else {
             $vals = array_values($el->getValue());
             if ($vals[0] == gradingform_controller::DEFINITION_STATUS_READY) {
-                $this->findButton('saverubric')->setValue(get_string('save', 'gradingform_erubric'));
+                $this->findbutton('saverubric')->setValue(get_string('save', 'gradingform_erubric'));
             }
         }
     }
@@ -183,7 +183,7 @@ class gradingform_erubric_editrubric extends moodleform {
         // Freeze form elements and pass the values in hidden fields.
         // TODO description_editor does not freeze the normal way!
         $form = $this->_form;
-        foreach (array('erubric', 'name'/*, 'description_editor'*/) as $fieldname) {
+        foreach (array('erubric', 'name') as $fieldname) {
             $el =& $form->getElement($fieldname);
             $el->freeze();
             $el->setPersistantFreeze(true);
@@ -193,8 +193,8 @@ class gradingform_erubric_editrubric extends moodleform {
         }
 
         // Replace button text 'saverubric' and unfreeze 'Back to edit' button.
-        $this->findButton('saverubric')->setValue(get_string('continue'));
-        $el =& $this->findButton('editrubric');
+        $this->findbutton('saverubric')->setValue(get_string('continue'));
+        $el =& $this->findbutton('editrubric');
         $el->setValue(get_string('backtoediting', 'gradingform_erubric'));
         $el->unfreeze();
 
@@ -207,7 +207,7 @@ class gradingform_erubric_editrubric extends moodleform {
      * @param string $elementname
      * @return HTML_QuickForm_element
      */
-    protected function &findButton($elementname) {
+    protected function &findbutton($elementname) {
         $form = $this->_form;
         $buttonar =& $form->getElement('buttonar');
         $elements =& $buttonar->getElements();

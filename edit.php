@@ -46,10 +46,16 @@ $PAGE->set_heading(get_string('defineenrichedrubric', 'gradingform_erubric'));
 // Small adjustments to add special classes for css, to better support the Greek language and other standard themes apart from Clean.
 $classsuffix = '';
 $lang = current_language();
-if ($lang == 'el') $classsuffix = ' hellenic';
+if ($lang == 'el') {
+    $classsuffix = ' hellenic';
+}
 $classsuffix .= ' '.$PAGE->theme->name.'_theme';
 
-$mform = new gradingform_erubric_editrubric(null, array('areaid' => $areaid, 'context' => $context, 'allowdraft' => !$controller->has_active_instances()), 'post', '', array('class' => 'gradingform_erubric_editform'.$classsuffix));
+$mform = new gradingform_erubric_editrubric(null, array('areaid' => $areaid,
+                                                        'context' => $context,
+                                                        'allowdraft' => !$controller->has_active_instances()),
+                                                        'post', '',
+                                                        array('class' => 'gradingform_erubric_editform'.$classsuffix));
 $data = $controller->get_definition_for_editing(true);
 $returnurl = optional_param('returnurl', $manager->get_management_url(), PARAM_LOCALURL);
 $data->returnurl = $returnurl;

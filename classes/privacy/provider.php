@@ -158,7 +158,7 @@ class provider implements
      *
      * @param \context $context Context owner of the data.
      */
-    public static function delete_gradingform_for_context(\context $context){
+    public static function delete_gradingform_for_context(\context $context) {
         global $DB;
 
         $select = "SELECT gi.id AS instanceid";
@@ -190,7 +190,7 @@ class provider implements
      * @param int $userid The user to delete.
      * @param \context $context the context to refine the deletion.
      */
-    public static function delete_gradingform_for_userid(int $userid, \context $context){
+    public static function delete_gradingform_for_userid(int $userid, \context $context) {
         global $DB;
 
         $select = "SELECT gi.id AS instanceid";
