@@ -480,7 +480,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
 
             // Check if user pressed the 'delete criterion' button and take appropriate actions...
             if ($withvalidation && !array_key_exists('delete', $criterion)) {
-                if (count($levels)<2) {
+                if (count($levels) < 2) {
                     $errors['err_mintwolevels'] = 1;
                     $criterion['error_levels'] = true;
                 }
@@ -541,7 +541,9 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
             if (count($errors)) {
                 $rv = array();
                 $prefix = '';
-                if (count($errors)>1) $prefix = '&bull;&nbsp;';
+                if (count($errors) > 1) {
+                    $prefix = '&bull;&nbsp;';
+                }
                 foreach ($errors as $error => $v) {
                     $rv[] = $prefix.get_string($error, 'gradingform_erubric');
                 }
@@ -567,7 +569,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                 $maxid = (int)$matches[1];
             }
         }
-        return 'NEWID'.($maxid+1);
+        return 'NEWID'.($maxid + 1);
     }
 
     /**
@@ -609,7 +611,7 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
      * @return array
      */
     public function exportValue(&$submitValues, $assoc = false) {
-        $value =  $this->prepare_data($this->_findValue($submitValues));
+        $value = $this->prepare_data($this->_findValue($submitValues));
         return $this->_prepareValue($value, $assoc);
     }
 }

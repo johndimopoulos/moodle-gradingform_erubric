@@ -31,11 +31,11 @@ $string['defineenrichedrubric'] = 'Define LA e-rubric';
 $string['erubric'] = 'Learning Analytics e-rubric';
 $string['gradingof'] = '{$a} grading';
 $string['previewerubric'] = 'Preview LA e-rubric';
-$string['criterion'] = 'Criterion {$a}'; //New
-$string['level'] = 'Level {$a->definition}, {$a->score} points.'; //New
-$string['leveldefinition'] = 'Level {$a} definition'; //New
-$string['levelsgroup'] = 'Levels group'; //New
-$string['scoreinputforlevel'] = 'Score input for level {$a}'; //New
+$string['criterion'] = 'Criterion {$a}';
+$string['level'] = 'Level {$a->definition}, {$a->score} points.';
+$string['leveldefinition'] = 'Level {$a} definition';
+$string['levelsgroup'] = 'Levels group';
+$string['scoreinputforlevel'] = 'Score input for level {$a}';
 
 // LA e-rubric form fields and buttons.
 $string['addcriterion'] = 'Add criterion';
@@ -51,7 +51,7 @@ $string['leveldelete'] = 'Delete level {$a}';
 $string['save'] = 'Save';
 $string['saverubric'] = 'Save enriched rubric and make it ready';
 $string['saverubricdraft'] = 'Save as draft';
-$string['criterionduplicate'] = 'Duplicate criterion'; //New
+$string['criterionduplicate'] = 'Duplicate criterion';
 
 // LA e-rubric form fields prefix labels.
 $string['participationin'] = 'Check:';
@@ -122,15 +122,15 @@ $string['enrichshareconfirm'] = '<p style="text-align:center;color:red;font-weig
     <b>Learning Analytics Enriched Rubric</b> plugin can be used as an advanced grading form template, ONLY FOR THE PRESENT COURSE!
     If other users at your site use this form in any other course, <b>it will not work as is</b>! The rubric\'s main structure will remain intact,
     but you will have to replace all embedded course modules with similar modules from the destination course.';
-$string['criterionremark'] = 'Remark for criterion {$a->description}: {$a->remark}'; //New
-$string['privacy:metadata:fillings'] = 'The database table that stores grading information and outcomes from Learning Analytics and Data Mining.'; //New
-$string['privacy:metadata:fillings:instanceid'] = 'The grading instance ID of a grade attempt from a specific grader using a specific e-rubric.'; //New
-$string['privacy:metadata:fillings:criterionid'] = 'The criterion ID of an e-rubric that was used for grading.'; //New
-$string['privacy:metadata:fillings:levelid'] = 'The selected level ID of an e-rubric criterion.'; //New
-$string['privacy:metadata:fillings:remark'] = 'The remark text provided by a grader during assessment of an e-rubric criterion.'; //New
-$string['privacy:metadata:fillings:enrichedbenchmark'] = 'The benchmark value of the enriched criterion, created from Data Mining and Learning Analytics.'; //New
-$string['privacy:metadata:fillings:enrichedbenchmarkstudent'] = 'The benchmark value of the student, created from Data Mining and Learning Analytics.'; //New
-$string['privacy:metadata:fillings:enrichedbenchmarkstudents'] = 'The benchmark value of all participating students, created from Data Mining and Learning Analytics.'; //New
+$string['criterionremark'] = 'Remark for criterion {$a->description}: {$a->remark}';
+$string['privacy:metadata:fillings'] = 'The database table that stores grading information and outcomes from Learning Analytics and Data Mining.';
+$string['privacy:metadata:fillings:instanceid'] = 'The grading instance ID of a grade attempt from a specific grader using a specific e-rubric.';
+$string['privacy:metadata:fillings:criterionid'] = 'The criterion ID of an e-rubric that was used for grading.';
+$string['privacy:metadata:fillings:levelid'] = 'The selected level ID of an e-rubric criterion.';
+$string['privacy:metadata:fillings:remark'] = 'The remark text provided by a grader during assessment of an e-rubric criterion.';
+$string['privacy:metadata:fillings:enrichedbenchmark'] = 'The benchmark value of the enriched criterion, created from Data Mining and Learning Analytics.';
+$string['privacy:metadata:fillings:enrichedbenchmarkstudent'] = 'The benchmark value of the student, created from Data Mining and Learning Analytics.';
+$string['privacy:metadata:fillings:enrichedbenchmarkstudents'] = 'The benchmark value of all participating students, created from Data Mining and Learning Analytics.';
 
 // LA e-rubric enrichment help icon.
 $string['enrichment'] = 'Enrichment';
@@ -171,10 +171,10 @@ $string['err_scoreformat'] = 'Number of points for each level must be a valid nu
 $string['err_totalscore'] = 'Maximum number of points possible when graded by the rubric must be more than zero.';
 $string['zerolevelsabsent'] = 'Warning: The minimum possible score for this rubric is not zero (0). This can result in unexpected grades for the activity.
     To avoid this, each criterion should have a level with zero (0) points.<br>
-    This warning may be ignored if a scale is used for grading, and the minimum levels in the rubric correspond to the minimum value of the scale.'; //New
-$string['err_novariations'] = 'The total minimum score cannot be the same with the total maximum score.'; //New
-$string['err_novariationspoints'] = 'Criterion levels cannot have the same number of points, in the same criterion.'; //New
-$string['err_novariationsvalues'] = 'Enriched criteria, must have different check values on all levels, in the same criterion.'; //New for enrichment
+    This warning may be ignored if a scale is used for grading, and the minimum levels in the rubric correspond to the minimum value of the scale.';
+$string['err_novariations'] = 'The total minimum score cannot be the same with the total maximum score.';
+$string['err_novariationspoints'] = 'Criterion levels cannot have the same number of points, in the same criterion.';
+$string['err_novariationsvalues'] = 'Enriched criteria, must have different check values on all levels, in the same criterion.';
 $string['needregrademessage'] = 'The enriched rubric definition was changed after this student had been graded.
     The student can not see this enriched rubric until you update the current grade.';
 $string['regrademessage1'] = '<p style="text-align:center;color:red;font-weight:bold">WARNING!</p>

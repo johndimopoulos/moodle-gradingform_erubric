@@ -35,7 +35,7 @@ require_once($CFG->dirroot.'/grade/grading/form/lib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class gradingform_erubric_controller extends gradingform_controller {
-    // Modes of displaying the enriched rubric (used in gradingform_erubric_renderer)
+    // Modes of displaying the enriched rubric (used in gradingform_erubric_renderer).
     /** Enriched rubric display mode: For editing (moderator or teacher creates a rubric) */
     const DISPLAY_EDIT_FULL     = 1;
     /** Enriched rubric display mode: Preview the rubric design with hidden fields */
@@ -43,7 +43,7 @@ class gradingform_erubric_controller extends gradingform_controller {
     /** Enriched rubric display mode: Preview the rubric design */
     const DISPLAY_PREVIEW       = 3;
     /** Enriched rubric display mode: Preview the rubric (for people being graded) */
-    const DISPLAY_PREVIEW_GRADED= 8;
+    const DISPLAY_PREVIEW_GRADED = 8;
     /** Enriched rubric display mode: For evaluation, enabled (teacher grades a student) */
     const DISPLAY_EVAL          = 4;
     /** Enriched rubric display mode: For evaluation, with hidden fields */
@@ -167,13 +167,13 @@ class gradingform_erubric_controller extends gradingform_controller {
             $haschanges[3] = true;
         }
 
-        // Update rubric data
+        // Update rubric data...
         if (empty($newdefinition->erubric['criteria'])) {
             $newcriteria = array();
         } else {
             $newcriteria = $newdefinition->erubric['criteria']; // New ones to be saved...
         }
-        $currentcriteria = $currentdefinition->erubric_criteria;
+        $currentcriteria = $currentdefinition->erubriccriteria;
 
         // Create tables to use for evaluation of form data.
         $enrichedcriteriafields = array('sortorder', 'description', 'descriptionformat', 'criteriontype', 'collaborationtype', 'operator', 'referencetype');
@@ -190,26 +190,26 @@ class gradingform_erubric_controller extends gradingform_controller {
                 $data = array('definitionid' => $this->definition->id, 'descriptionformat' => FORMAT_MOODLE);
                 foreach ($enrichedcriteriafields as $key) {
                     if (array_key_exists($key, $criterion)) {
-                        $data[$key] = ($criterion[$key]&&(String)$criterion[$key] != '')? $criterion[$key]: null;
+                        $data[$key] = ($criterion[$key]&&(String)$criterion[$key] != '') ? $criterion[$key] : null;
                     }
                 }
 
                 // Handle course modules array (if exist), to store in database.
-                if (array_key_exists('coursemodules', $criterion) && $criterion['coursemodules'] && is_array($criterion['coursemodules'])){
+                if (array_key_exists('coursemodules', $criterion) && $criterion['coursemodules'] && is_array($criterion['coursemodules'])) {
 
                     // Check if user wants to publish the given form definition as a new template in the forms bank,
                     // or if he uses a template to create a new form.
                     $formshared = optional_param('shareform', '', PARAM_INT);
                     $pick = optional_param('pick', '', PARAM_INT);
-                    if ($formshared || $pick){
+                    if ($formshared || $pick) {
                         // Don't re-encode coursemodules table.
-                        $dblbrackets = array('[[',']]');
-                        $snglbrackets = array('[',']');
+                        $dblbrackets = array('[[', ']]');
+                        $snglbrackets = array('[', ']');
                         $data['coursemodules'] = str_replace($dblbrackets, $snglbrackets, json_encode($criterion['coursemodules']));
-                    }else{
+                    } else {
                         $data['coursemodules'] = json_encode($criterion['coursemodules']);
                     }
-                }else{
+                } else {
                     $data['coursemodules'] = null;
                 }
 
@@ -222,37 +222,40 @@ class gradingform_erubric_controller extends gradingform_controller {
                 $data = array();
 
                 // Set missing array elements to empty strings to avoid warnings.
-                if (!array_key_exists('coursemodules', $criterion)) $criterion['coursemodules'] = '';
+                if (!array_key_exists('coursemodules', $criterion)) {
+                    $criterion['coursemodules'] = '';
+                }
 
                 foreach ($enrichedcriteriafields as $key) {
                     if (array_key_exists($key, $criterion) && (String)$criterion[$key] != (String)$currentcriteria[$id][$key]) {
-                        $data[$key] = ($criterion[$key]&&(String)$criterion[$key] != '')? $criterion[$key]: null;
+                        $data[$key] = ($criterion[$key]&&(String)$criterion[$key] != '') ? $criterion[$key] : null;
                     }
                 }
 
                 // Handle course modules array.
-                if (is_array($criterion['coursemodules'])){
+                if (is_array($criterion['coursemodules'])) {
 
                     // Check if coursemodules array already exist in current definition.
-                    if (array_key_exists('coursemodules', $currentcriteria[$id]) && is_array($currentcriteria[$id]['coursemodules'])){
+                    if (array_key_exists('coursemodules', $currentcriteria[$id]) && is_array($currentcriteria[$id]['coursemodules'])) {
                         // Something quick to accurate compare the modules array from the form, with the modules array to be updated.
-                        $dblbrackets = array('[[',']]');
-                        $snglbrackets = array('[',']');
+                        $dblbrackets = array('[[', ']]');
+                        $snglbrackets = array('[', ']');
                         $tempmodulescompstr1 = str_replace($dblbrackets, $snglbrackets, json_encode($currentcriteria[$id]['coursemodules']));
                         $tempmodulescompstr2 = json_encode($criterion['coursemodules']);
-                    }else{
+                    } else {
                         $tempmodulescompstr1 = 1; // Dummy var
                         $tempmodulescompstr2 = 2; // Dummy var
                     }
 
                     // If there is a change, update current data.
-                    if ($tempmodulescompstr1!=$tempmodulescompstr2) {
+                    if ($tempmodulescompstr1 != $tempmodulescompstr2) {
                         $data['coursemodules'] = json_encode($criterion['coursemodules']);
                     }
-                }else{
+                } else {
                     // In case we need to reset already stored course modules to null...
-                    if (array_key_exists('coursemodules', $currentcriteria[$id]))
+                    if (array_key_exists('coursemodules', $currentcriteria[$id])) {
                         $data['coursemodules'] = null;
+                    }
                 }
 
                 if (!empty($data)) {
@@ -262,10 +265,9 @@ class gradingform_erubric_controller extends gradingform_controller {
                         $DB->update_record('gradingform_erubric_criteria', $data);
                     }
                     // Check if there is a change in any of the enriched fields.
-                    if (count($data)>1 || (count($data)==2 && !isset($data['description']))){
-                        $haschanges[5] = true; //TODO: Check if this condition works. Maybe there is something about descriptionformat.
-                    // Else, only the criterion description has changed.
-                    }else{
+                    if (count($data)>1 || (count($data)==2 && !isset($data['description']))) {
+                        $haschanges[5] = true; // TODO: Check if this condition works. Maybe there is something about descriptionformat.
+                    } else { // Else, only the criterion description has changed.
                         $haschanges[1] = true;
                     }
                 }
@@ -287,9 +289,9 @@ class gradingform_erubric_controller extends gradingform_controller {
                     $level['score'] = unformat_float($level['score']);
                 }
 
-                if (array_key_exists('enrichedvalue', $level) && !is_null($level['enrichedvalue']) && strlen(trim($level['enrichedvalue']))>0) {
+                if (array_key_exists('enrichedvalue', $level) && !is_null($level['enrichedvalue']) && strlen(trim($level['enrichedvalue'])) > 0) {
                     $level['enrichedvalue'] = unformat_float($level['enrichedvalue']);
-                }else{
+                } else {
                     $level['enrichedvalue'] = null;
                 }
 
@@ -298,7 +300,7 @@ class gradingform_erubric_controller extends gradingform_controller {
                     $data = array('criterionid' => $id, 'definitionformat' => FORMAT_MOODLE);
                     foreach ($enrichedlevelfields as $key) {
 
-                        if (array_key_exists($key, $level) && strlen(trim($level[$key]))>0) {
+                        if (array_key_exists($key, $level) && strlen(trim($level[$key])) > 0) {
                             $data[$key] = $level[$key];
                         }
                     }
@@ -313,7 +315,7 @@ class gradingform_erubric_controller extends gradingform_controller {
                     }
 
                     // If there is a new enriched level value added, students must be re-graded.
-                    if (count($data)>1){
+                    if (count($data) > 1) {
                         $haschanges[5] = true;
                     }
 
@@ -336,10 +338,9 @@ class gradingform_erubric_controller extends gradingform_controller {
                         }
 
                         // Check if there is a change in any of the enriched fields.
-                        if (count($data)>1 || (count($data)==1 && !is_null($data['enrichedvalue']))){
+                        if (count($data) > 1 || (count($data) == 1 && !is_null($data['enrichedvalue']))) {
                             $haschanges[5] = true;
-                        // Else, only the criterion description has changed.
-                        }else{
+                        } else { // Else, only the criterion description has changed.
                             $haschanges[1] = true;
                         }
                     }
@@ -392,7 +393,7 @@ class gradingform_erubric_controller extends gradingform_controller {
     /**
      * Loads the enriched rubric form definition if it exists.
      *
-     * There is a new array called 'erubric_criteria' appended to the list of parent's definition properties.
+     * There is a new array called 'erubriccriteria' appended to the list of parent's definition properties.
      */
     protected function load_definition() {
 
@@ -419,23 +420,23 @@ class gradingform_erubric_controller extends gradingform_controller {
                         'timecreated', 'usercreated', 'timemodified', 'usermodified', 'timecopied', 'options') as $fieldname) {
                     $this->definition->$fieldname = $record->$fieldname;
                 }
-                $this->definition->erubric_criteria = array();
+                $this->definition->erubriccriteria = array();
             }
             // Pick the criterion data.
-            if (!empty($record->ercid) and empty($this->definition->erubric_criteria[$record->ercid])) {
+            if (!empty($record->ercid) and empty($this->definition->erubriccriteria[$record->ercid])) {
                 foreach (array('id', 'sortorder', 'description', 'descriptionformat', 'criteriontype', 'collaborationtype', 'operator', 'referencetype') as $fieldname) {
-                    $this->definition->erubric_criteria[$record->ercid][$fieldname] = $record->{'erc'.$fieldname};
+                    $this->definition->erubriccriteria[$record->ercid][$fieldname] = $record->{'erc'.$fieldname};
                 }
 
                 // Handle the coursemodules and create the appropriate array.
-                if ($record->{'erccoursemodules'}){
-                    $this->definition->erubric_criteria[$record->ercid]['coursemodules'] = array();
+                if ($record->{'erccoursemodules'}) {
+                    $this->definition->erubriccriteria[$record->ercid]['coursemodules'] = array();
                     $crsmodules = json_decode($record->{'erccoursemodules'});
                     foreach ($crsmodules as $module => $moduleids) {
-                        $this->definition->erubric_criteria[$record->ercid]['coursemodules'][$module][] = $moduleids;
+                        $this->definition->erubriccriteria[$record->ercid]['coursemodules'][$module][] = $moduleids;
                     }
                 }
-                $this->definition->erubric_criteria[$record->ercid]['levels'] = array();
+                $this->definition->erubriccriteria[$record->ercid]['levels'] = array();
             }
             // Pick the level data.
             if (!empty($record->erlid)) {
@@ -444,7 +445,7 @@ class gradingform_erubric_controller extends gradingform_controller {
                     if ($fieldname == 'score' || ($fieldname == 'enrichedvalue' && !is_null($value))) {
                         $value = (float)$value; // To prevent displaying something like '1.00000'.
                     }
-                    $this->definition->erubric_criteria[$record->ercid]['levels'][$record->erlid][$fieldname] = $value;
+                    $this->definition->erubriccriteria[$record->ercid]['levels'][$record->erlid][$fieldname] = $value;
                 }
             }
         }
@@ -452,8 +453,8 @@ class gradingform_erubric_controller extends gradingform_controller {
         $rs->close();
         $options = $this->get_options();
         if (!$options['sortlevelsasc']) {
-            foreach (array_keys($this->definition->erubric_criteria) as $ercid) {
-                $this->definition->erubric_criteria[$ercid]['levels'] = array_reverse($this->definition->erubric_criteria[$ercid]['levels'], true);
+            foreach (array_keys($this->definition->erubriccriteria) as $ercid) {
+                $this->definition->erubriccriteria[$ercid]['levels'] = array_reverse($this->definition->erubriccriteria[$ercid]['levels'], true);
             }
         }
     }
@@ -529,8 +530,8 @@ class gradingform_erubric_controller extends gradingform_controller {
                 'grading', 'description', $definition->id);
         }
         $properties->erubric = array('criteria' => array(), 'options' => $this->get_options());
-        if (!empty($definition->erubric_criteria)) {
-            $properties->erubric['criteria'] = $definition->erubric_criteria;
+        if (!empty($definition->erubriccriteria)) {
+            $properties->erubric['criteria'] = $definition->erubriccriteria;
         } else if (!$definition && $addemptycriterion) {
             $properties->erubric['criteria'] = array('addcriterion' => 1);
         }
@@ -651,14 +652,14 @@ class gradingform_erubric_controller extends gradingform_controller {
             throw new coding_exception('It is the caller\'s responsibility to make sure that the form is actually defined');
         }
 
-        $criteria = $this->definition->erubric_criteria;
+        $criteria = $this->definition->erubriccriteria;
         $options = $this->get_options();
         $erubric = '';
         if (has_capability('moodle/grade:managegradingforms', $page->context)) {
             $showdescription = true;
         } else {
             if (empty($options['alwaysshowdefinition']))  {
-                // ensure we don't display unless show rubric option enabled
+                // Ensure we don't display unless show rubric option enabled.
                 return '';
             }
             $showdescription = $options['showdescriptionstudent'];
@@ -746,8 +747,6 @@ class gradingform_erubric_controller extends gradingform_controller {
         return $this->get_renderer($page)->display_instances($this->get_active_instances($itemid), $defaultcontent, $cangrade);
     }
 
-    //// full-text search support /////////////////////////////////////////////
-
     /**
      * Prepare the part of the search query to append to the FROM statement
      *
@@ -796,14 +795,14 @@ class gradingform_erubric_controller extends gradingform_controller {
             return null;
         }
         $returnvalue = array('minscore' => 0, 'maxscore' => 0);
-        foreach ($this->get_definition()->erubric_criteria as $id => $criterion) {
+        foreach ($this->get_definition()->erubriccriteria as $id => $criterion) {
             $scores = array();
             foreach ($criterion['levels'] as $level) {
                 $scores[] = $level['score'];
             }
             sort($scores);
             $returnvalue['minscore'] += $scores[0];
-            $returnvalue['maxscore'] += $scores[sizeof($scores)-1];
+            $returnvalue['maxscore'] += $scores[count($scores) - 1];
         }
         return $returnvalue;
     }
@@ -812,12 +811,12 @@ class gradingform_erubric_controller extends gradingform_controller {
      * Returns an array that defines the structure of the rubric's criteria. This function is used by the web service functions
      * core_grading_external::get_definitions(), core_grading_external::definition() and core_grading_external::create_definition_object().
 
-     * @return array An array containing a single key/value pair with the 'erubric_criteria' external_multiple_structure.
+     * @return array An array containing a single key/value pair with the 'erubriccriteria' external_multiple_structure.
      * @see gradingform_controller::get_external_definition_details()
      * @since Moodle 2.5
      */
     public static function get_external_definition_details() {
-        $erubric_criteria = new external_multiple_structure(
+        $erubriccriteria = new external_multiple_structure(
             new external_single_structure(
                 array(
                    'id'   => new external_value(PARAM_INT, 'criterion id', VALUE_OPTIONAL),
@@ -843,7 +842,7 @@ class gradingform_erubric_controller extends gradingform_controller {
                    )
               ), 'definition details', VALUE_OPTIONAL
         );
-        return array('rubric_criteria' => $erubric_criteria);
+        return array('rubric_criteria' => $erubriccriteria);
     }
 
     /**
@@ -925,7 +924,7 @@ class gradingform_erubric_instance extends gradingform_instance {
      * @return boolean true if the form is empty
      */
     public function is_empty_form($elementvalue) {
-        $criteria = $this->get_controller()->get_definition()->erubric_criteria;
+        $criteria = $this->get_controller()->get_definition()->erubriccriteria;
 
         foreach ($criteria as $id => $criterion) {
             if (isset($elementvalue['criteria'][$id]['levelid'])
@@ -956,8 +955,8 @@ class gradingform_erubric_instance extends gradingform_instance {
      * @return boolean true if the form data is validated and contains no errors
      */
     public function validate_grading_element($elementvalue) {
-        $criteria = $this->get_controller()->get_definition()->erubric_criteria;
-        if (!isset($elementvalue['criteria']) || !is_array($elementvalue['criteria']) || sizeof($elementvalue['criteria']) < sizeof($criteria)) {
+        $criteria = $this->get_controller()->get_definition()->erubriccriteria;
+        if (!isset($elementvalue['criteria']) || !is_array($elementvalue['criteria']) || count($elementvalue['criteria']) < count($criteria)) {
             return false;
         }
         foreach ($criteria as $id => $criterion) {
@@ -1006,21 +1005,21 @@ class gradingform_erubric_instance extends gradingform_instance {
                     $newrecord['remark'] = $record['remark'];
                 }
                 if (isset($record['enrichedbenchmark'])) {
-                    $newrecord['enrichedbenchmark'] = ((String)$record['enrichedbenchmark'] != '')? $record['enrichedbenchmark']: null;
+                    $newrecord['enrichedbenchmark'] = ((String)$record['enrichedbenchmark'] != '') ? $record['enrichedbenchmark'] : null;
                 }
                 if (isset($record['enrichedbenchmarkstudent'])) {
-                    $newrecord['enrichedbenchmarkstudent'] = ((String)$record['enrichedbenchmarkstudent'] != '')? $record['enrichedbenchmarkstudent']: null;
+                    $newrecord['enrichedbenchmarkstudent'] = ((String)$record['enrichedbenchmarkstudent'] != '') ? $record['enrichedbenchmarkstudent'] : null;
                 }
                 if (isset($record['enrichedbenchmarkstudents'])) {
-                    $newrecord['enrichedbenchmarkstudents'] = ((String)$record['enrichedbenchmarkstudents'] != '')? $record['enrichedbenchmarkstudents']: null;
+                    $newrecord['enrichedbenchmarkstudents'] = ((String)$record['enrichedbenchmarkstudents'] != '') ? $record['enrichedbenchmarkstudents'] : null;
                 }
                 $DB->insert_record('gradingform_erubric_fillings', $newrecord);
             } else {
                 $newrecord = array('id' => $currentgrade['criteria'][$criterionid]['id']);
                 foreach (array('levelid', 'remark', 'enrichedbenchmark', 'enrichedbenchmarkstudent', 'enrichedbenchmarkstudents') as $key) {
                     if (array_key_exists($key, $record)) {
-                        $newrecord[$key] = ((String)$record[$key] != ''||$key=='remark')? $record[$key]: null;
-                    }else{
+                        $newrecord[$key] = ((String)$record[$key] != ''||$key == 'remark') ? $record[$key] : null;
+                    } else {
                         $newrecord[$key] = null;
                     }
                 }
@@ -1057,11 +1056,11 @@ class gradingform_erubric_instance extends gradingform_instance {
         }
         sort($graderange);
         $mingrade = $graderange[0];
-        $maxgrade = $graderange[sizeof($graderange) - 1];
+        $maxgrade = $graderange[count($graderange) - 1];
 
         $curscore = 0;
         foreach ($grade['criteria'] as $id => $record) {
-            $curscore += $this->get_controller()->get_definition()->erubric_criteria[$id]['levels'][$record['levelid']]['score'];
+            $curscore += $this->get_controller()->get_definition()->erubriccriteria[$id]['levels'][$record['levelid']]['score'];
         }
 
         $allowdecimals = $this->get_controller()->get_allow_grade_decimals();
@@ -1088,7 +1087,7 @@ class gradingform_erubric_instance extends gradingform_instance {
     public function render_grading_element($page, $gradingformelement) {
         global $USER;
         if (!$gradingformelement->_flagFrozen) {
-            $module = array('name'=>'gradingform_erubric', 'fullpath'=>'/grade/grading/form/erubric/js/erubric.js');
+            $module = array('name' => 'gradingform_erubric', 'fullpath' => '/grade/grading/form/erubric/js/erubric.js');
             $page->requires->js_init_call('M.gradingform_erubric.init', array(array('name' => $gradingformelement->getName())), true, $module);
             $mode = gradingform_erubric_controller::DISPLAY_EVAL;
         } else {
@@ -1098,7 +1097,7 @@ class gradingform_erubric_instance extends gradingform_instance {
                 $mode = gradingform_erubric_controller::DISPLAY_REVIEW;
             }
         }
-        $criteria = $this->get_controller()->get_definition()->erubric_criteria;
+        $criteria = $this->get_controller()->get_definition()->erubriccriteria;
         $options = $this->get_controller()->get_options();
         $value = $gradingformelement->getValue();
         $html = '';
@@ -1122,16 +1121,26 @@ class gradingform_erubric_instance extends gradingform_instance {
                 $newenrichedbenchmark = null;
                 $newenrichedbenchmarkstudent = null;
                 $newenrichedbenchmarkstudents = null;
-                if (isset($value['criteria'][$criterionid]['remark'])) $newremark = $value['criteria'][$criterionid]['remark'];
-                if (isset($value['criteria'][$criterionid]['levelid'])) $newlevelid = $value['criteria'][$criterionid]['levelid'];
-                if (array_key_exists('enrichedbenchmark', $value['criteria'][$criterionid])) $newenrichedbenchmark = $value['criteria'][$criterionid]['enrichedbenchmark'];
-                if (array_key_exists('enrichedbenchmarkstudent', $value['criteria'][$criterionid])) $newenrichedbenchmarkstudent = $value['criteria'][$criterionid]['enrichedbenchmarkstudent'];
-                if (array_key_exists('enrichedbenchmarkstudents', $value['criteria'][$criterionid])) $newenrichedbenchmarkstudents = $value['criteria'][$criterionid]['enrichedbenchmarkstudents'];
+                if (isset($value['criteria'][$criterionid]['remark'])) {
+                    $newremark = $value['criteria'][$criterionid]['remark'];
+                }
+                if (isset($value['criteria'][$criterionid]['levelid'])) {
+                    $newlevelid = $value['criteria'][$criterionid]['levelid'];
+                }
+                if (array_key_exists('enrichedbenchmark', $value['criteria'][$criterionid])) {
+                    $newenrichedbenchmark = $value['criteria'][$criterionid]['enrichedbenchmark'];
+                }
+                if (array_key_exists('enrichedbenchmarkstudent', $value['criteria'][$criterionid])) {
+                    $newenrichedbenchmarkstudent = $value['criteria'][$criterionid]['enrichedbenchmarkstudent'];
+                }
+                if (array_key_exists('enrichedbenchmarkstudents', $value['criteria'][$criterionid])) {
+                    $newenrichedbenchmarkstudents = $value['criteria'][$criterionid]['enrichedbenchmarkstudents'];
+                }
                 if ($newlevelid != $curvalues['levelid'] ||
                     $newremark != $curvalues['remark'] ||
-                    (string)$newenrichedbenchmark!=(string)$curvalues['enrichedbenchmark'] ||
-                    (string)$newenrichedbenchmarkstudent!=(string)$curvalues['enrichedbenchmarkstudent'] ||
-                    (string)$newenrichedbenchmarkstudents!=(string)$curvalues['enrichedbenchmarkstudents']) {
+                    (string)$newenrichedbenchmark != (string)$curvalues['enrichedbenchmark'] ||
+                    (string)$newenrichedbenchmarkstudent != (string)$curvalues['enrichedbenchmarkstudent'] ||
+                    (string)$newenrichedbenchmarkstudents != (string)$curvalues['enrichedbenchmarkstudents']) {
                     $haschanges = true;
                 }
             }
