@@ -17,8 +17,8 @@
 /**
  * Contains renderer used for displaying e-rubric
  *
- * @package    gradingform_erubric
- * @name       Learning Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform
+ * @subpackage Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -32,8 +32,8 @@ require_once($CFG->libdir.'/resourcelib.php');
 /**
  * Grading method plugin renderer
  *
- * @package    gradingform_erubric
- * @name       Learinng Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform
+ * @subpackage Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

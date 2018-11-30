@@ -17,8 +17,8 @@
 /**
  * File contains definition of class MoodleQuickForm_erubriceditor
  *
- * @package    gradingform_erubric
- * @name       Learning Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform
+ * @subpackage Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -38,8 +38,8 @@ require_once("HTML/QuickForm/input.php");
  * If Javascript is disabled when one of those special buttons is pressed, the form
  * element is not validated and, instead of submitting the form, we process button presses.
  *
- * @package    gradingform_erubric
-   @name       Learinng Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform
+ * @subpackage Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

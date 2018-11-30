@@ -16,8 +16,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    gradingform_erubric
- * @name       Learning Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform
+ * @subpackage Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

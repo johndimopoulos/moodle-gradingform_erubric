@@ -15,24 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Support for backup API
+ * Defines learning analytics enriched rubric backup structures.
  *
- * @package    gradingform_erubric
- * @name       Learning Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform
+ * @subpackage Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-/**
- * Defines learning analytics enriched rubric backup structures.
-
- * @package    gradingform
- * @subpackage Learinng Analytics Enriched Rubric (e-rubric)
- * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 class backup_gradingform_erubric_plugin extends backup_gradingform_plugin {
 
     /**
@@ -51,12 +43,13 @@ class backup_gradingform_erubric_plugin extends backup_gradingform_plugin {
 
         // Define our elements.
         $ecriteria = new backup_nested_element('enrichedcriteria');
-        $ecriterion = new backup_nested_element('enrichedcriterion', array('id'), array(
-            'sortorder', 'description', 'descriptionformat', 'criteriontype', 'collaborationtype', 'coursemodules', 'operator', 'referencetype'));
+        $ecriterion = new backup_nested_element('enrichedcriterion', array('id'), array('sortorder', 'description',
+                                                'descriptionformat', 'criteriontype', 'collaborationtype', 'coursemodules',
+                                                'operator', 'referencetype'));
 
         $elevels = new backup_nested_element('enrichedlevels');
-        $elevel = new backup_nested_element('enrichedlevel', array('id'), array(
-            'score', 'definition', 'definitionformat', 'enrichedvalue'));
+        $elevel = new backup_nested_element('enrichedlevel', array('id'), array('score', 'definition', 'definitionformat',
+                                            'enrichedvalue'));
 
         // Build elements hierarchy.
         $pluginwrapper->add_child($ecriteria);
@@ -91,16 +84,16 @@ class backup_gradingform_erubric_plugin extends backup_gradingform_plugin {
         // Connect our visible container to the parent.
         $plugin->add_child($pluginwrapper);
 
-        // Define our elements
+        // Define our elements.
         $efillings = new backup_nested_element('enrichedfillings');
-        $efilling = new backup_nested_element('enrichedfilling', array('id'), array(
-            'criterionid', 'levelid', 'remark', 'remarkformat', 'enrichedbenchmark', 'enrichedbenchmarkstudent', 'enrichedbenchmarkstudents'));
+        $efilling = new backup_nested_element('enrichedfilling', array('id'), array('criterionid', 'levelid', 'remark',
+                              'remarkformat', 'enrichedbenchmark', 'enrichedbenchmarkstudent', 'enrichedbenchmarkstudents'));
 
-        // Build elements hierarchy
+        // Build elements hierarchy.
         $pluginwrapper->add_child($efillings);
         $efillings->add_child($efilling);
 
-        // Binding criterionid to ensure it's existence
+        // Binding criterionid to ensure it's existence.
         $efilling->set_source_sql('SELECT rf.*
                 FROM {gradingform_erubric_fillings} rf
                 JOIN {grading_instances} gi ON gi.id = rf.instanceid

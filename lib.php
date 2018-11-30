@@ -17,8 +17,8 @@
 /**
  * Grading method controller for the Learning Analytics Enriched Rubric plugin
  *
- * @package    gradingform_erubric
- * @name       Learning Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform
+ * @subpackage Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -29,8 +29,8 @@ require_once($CFG->dirroot.'/grade/grading/form/lib.php');
 
 /**
  * This controller encapsulates the enriched rubric grading logic
- * @package    gradingform_erubric
- * @name       Learinng Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform
+ * @subpackage Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -877,8 +877,8 @@ class gradingform_erubric_controller extends gradingform_controller {
  *
  * Stores information and performs actions like update, copy, validate, submit, etc.
  *
- * @package    gradingform_erubric
- * @name       Learinng Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform
+ * @name       Learning Analytics Enriched Rubric
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

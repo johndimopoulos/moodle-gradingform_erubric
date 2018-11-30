@@ -17,8 +17,8 @@
 /**
  * Learning Analytics Enriched Rubric editor page
  *
- * @package    gradingform_erubric
- * @name       Learning Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform
+ * @subpackage Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -43,7 +43,7 @@ $PAGE->set_url(new moodle_url('/grade/grading/form/erubric/edit.php', array('are
 $PAGE->set_title(get_string('defineenrichedrubric', 'gradingform_erubric'));
 $PAGE->set_heading(get_string('defineenrichedrubric', 'gradingform_erubric'));
 
-// Small adjustments to add special classes for css, to better support the Greek language and other standard themes apart from Clean.
+// Small adjustments to add special classes for css, to support the Greek language and other standard themes apart from Clean.
 $classsuffix = '';
 $lang = current_language();
 if ($lang == 'el') {
@@ -69,7 +69,8 @@ if ($mform->is_cancelled()) {
     // If we do not go back to management url and the minscore warning needs to be displayed, display it during redirection.
     $warning = null;
     if (!empty($data->returnurl) && $data->returnurl !== $manager->get_management_url()->out(false)) {
-        if (empty($data->rubric['options']['lockzeropoints']) && ($scores = $controller->get_min_max_score()) && $scores['minscore'] <> 0) {
+        if (empty($data->rubric['options']['lockzeropoints']) && ($scores = $controller->get_min_max_score())
+            && $scores['minscore'] <> 0) {
             $warning = get_string('zerolevelsabsent', 'gradingform_rubric').'<br>'.
                 html_writer::link($manager->get_management_url(), get_string('back'));
         }
