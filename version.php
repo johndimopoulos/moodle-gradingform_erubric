@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Contains version information about this plugin.
+ *
  * @package    gradingform
  * @subpackage Learning Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos

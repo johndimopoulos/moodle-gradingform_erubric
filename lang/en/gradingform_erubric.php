@@ -63,7 +63,7 @@ $string['description'] = 'Description';
 $string['name'] = 'Name';
 $string['rubricstatus'] = 'Current LA e-rubric status';
 
-// LA e-rubric pre-defined select fields values description
+// LA e-rubric pre-defined select fields values description.
 $string['selectstudy'] = 'study';
 $string['selectcollaboration'] = 'collaboration';
 $string['selectgrade'] = 'grade';
@@ -75,7 +75,7 @@ $string['collaborationtypeentries'] = 'posts & talks';
 $string['collaborationtypefileadds'] = 'file submissions';
 $string['collaborationtypereplies'] = 'forum replies';
 $string['collaborationtypeinteractions'] = 'people interacted';
-$string['addnew'] = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add (+)'; // Added spaces in order to move string to the middle of the option select field
+$string['addnew'] = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add (+)'; // Added spaces in order to move string to the middle of the option select field.
 
 // LA e-rubric confirmation dialogs.
 $string['confirmdeletecriterion'] = 'Are you sure you want to delete this criterion?';

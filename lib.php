@@ -243,8 +243,8 @@ class gradingform_erubric_controller extends gradingform_controller {
                         $tempmodulescompstr1 = str_replace($dblbrackets, $snglbrackets, json_encode($currentcriteria[$id]['coursemodules']));
                         $tempmodulescompstr2 = json_encode($criterion['coursemodules']);
                     } else {
-                        $tempmodulescompstr1 = 1; // Dummy var
-                        $tempmodulescompstr2 = 2; // Dummy var
+                        $tempmodulescompstr1 = 1; // Dummy var.
+                        $tempmodulescompstr2 = 2; // Dummy var.
                     }
 
                     // If there is a change, update current data.
@@ -265,7 +265,7 @@ class gradingform_erubric_controller extends gradingform_controller {
                         $DB->update_record('gradingform_erubric_criteria', $data);
                     }
                     // Check if there is a change in any of the enriched fields.
-                    if (count($data)>1 || (count($data)==2 && !isset($data['description']))) {
+                    if (count($data) > 1 || (count($data) == 2 && !isset($data['description']))) {
                         $haschanges[5] = true; // TODO: Check if this condition works. Maybe there is something about descriptionformat.
                     } else { // Else, only the criterion description has changed.
                         $haschanges[1] = true;
@@ -658,7 +658,7 @@ class gradingform_erubric_controller extends gradingform_controller {
         if (has_capability('moodle/grade:managegradingforms', $page->context)) {
             $showdescription = true;
         } else {
-            if (empty($options['alwaysshowdefinition']))  {
+            if (empty($options['alwaysshowdefinition'])) {
                 // Ensure we don't display unless show rubric option enabled.
                 return '';
             }

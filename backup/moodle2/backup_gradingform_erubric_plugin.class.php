@@ -94,11 +94,11 @@ class backup_gradingform_erubric_plugin extends backup_gradingform_plugin {
         $efillings->add_child($efilling);
 
         // Binding criterionid to ensure it's existence.
-        $efilling->set_source_sql('SELECT rf.*
+        $efilling->set_source_sql("SELECT rf.*
                 FROM {gradingform_erubric_fillings} rf
                 JOIN {grading_instances} gi ON gi.id = rf.instanceid
                 JOIN {gradingform_erubric_criteria} rc ON rc.id = rf.criterionid AND gi.definitionid = rc.definitionid
-                WHERE rf.instanceid = :instanceid',
+                WHERE rf.instanceid = :instanceid",
                 array('instanceid' => backup::VAR_PARENTID));
 
         // No need to annotate ids or files yet (one day when remark field supports

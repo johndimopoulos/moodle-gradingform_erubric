@@ -63,7 +63,7 @@ $string['description'] = 'Περιγραφή';
 $string['name'] = 'Όνομα';
 $string['rubricstatus'] = 'Κατάσταση ε-ρουμπρίκας';
 
-// LA e-rubric pre-defined select fields values description
+// LA e-rubric pre-defined select fields values description.
 $string['selectstudy'] = 'μελέτη';
 $string['selectcollaboration'] = 'συνεργασία';
 $string['selectgrade'] = 'βαθμολογία';
@@ -75,7 +75,7 @@ $string['collaborationtypeentries'] = 'συνομιλίες';
 $string['collaborationtypefileadds'] = 'υποβολές αρχείων';
 $string['collaborationtypereplies'] = 'απαντήσεις σχόλιων';
 $string['collaborationtypeinteractions'] = 'πλήθος ατόμων';
-$string['addnew'] = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Προσθ. (+)'; // Added spaces in order to move string to the middle of the option select field
+$string['addnew'] = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Προσθ. (+)'; // Added spaces in order to move string to the middle of the option select field.
 
 // LA e-rubric confirmation dialogs.
 $string['confirmdeletecriterion'] = 'Είστε σίγουροι πως θέλετε να διαγράψετε αυτό το κριτήριο;';
@@ -106,7 +106,7 @@ $string['collaborationempty'] = 'Είδος αλληλ/δρασης';
 
 // LA e-rubric info explained.
 $string['rubricmapping'] = 'Κανόνες απόδοσης τελικής βαθμολογίας';
-$string['rubricmappingexplained'] = 'Το ελάχιστο δυνατό αποτέλεσμα της εμπλουτισμένης ρουμπρίκας είναι <b>{$a->minscore} βαθμοί</b> 
+$string['rubricmappingexplained'] = 'Το ελάχιστο δυνατό αποτέλεσμα της εμπλουτισμένης ρουμπρίκας είναι <b>{$a->minscore} βαθμοί</b>
     και θα μετατραπεί στο ελάχιστο δυνατό αποτέλεσμα του πόρου αξιολόγησης (αυτής της εργασίας βαθμολόγησης) (που είναι το μηδέν εκτός και αν χρησιμοποιείται κάποια κλίμακα).
     Το μέγιστο αποτέλεσμα <b>{$a->maxscore} βαθμοί</b> θα μετατραπεί στη μέγιστη δυνατή βαθμολόγηση.<br />
     Ενδιάμεσα αποτελέσματα θα μετατραπούν ανάλογα και θα στρογγυλοποιηθούν στον κοντινότερο διαθέσιμο βαθμό.<br />

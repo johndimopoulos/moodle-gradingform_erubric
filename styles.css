@@ -96,8 +96,8 @@
 /** E-rubric form. **/
 /* Importance needed to properly show the notifications above criteria. */
 .gradingform_erubric_editform .editor_atto_notification {
-    position: static !important;
-    height: auto !important;
+    position: static;
+    height: auto;
 }
 
 .gradingform_erubric_editform .status {
@@ -110,12 +110,12 @@
 
 .gradingform_erubric_editform .status.ready {
     background-color: #e7f1c3;
-    border-color: #aaeeaa;
+    border-color: #aea;
 }
 
 .gradingform_erubric_editform .status.draft {
     background-color: #f3f2aa;
-    border-color: #eeee22;
+    border-color: #ee2;
 }
 
 .gradingform_erubric .enrichedcriteria {
@@ -153,7 +153,7 @@
 /* Importance needed for grading */
 .gradingform_erubric .criterion .remark textarea {
     width: 100%;
-    padding: 0px !important;
+    padding: 0px;
 }
 
 /** Rubric results during grading from Learning Analytics **/
@@ -288,7 +288,7 @@
 
 /* Importance needed when student views evaluation. */
 .gradingform_erubric .criterion .levels .level {
-    border-left: 1px solid #ddd !important;
+    border-left: 1px solid #ddd;
     max-width: 145px;
     overflow: auto;
 }
@@ -300,12 +300,12 @@
 
 /* Importance needed for the textarea NOT to appear too small. */
 .gradingform_erubric .criterion .levels .level .level-wrapper textarea {
-    height: initial !important;
+    height: initial;
 }
 
 /* Importance needed when student views evaluation. */
 .gradingform_erubric .criterion .levels .level.last {
-    border-right: 1px solid #ddd !important;
+    border-right: 1px solid #ddd;
 }
 
 .gradingform_erubric .plainvalue.empty {
@@ -453,7 +453,7 @@
 /* Importance needed when student views evaluation. */
 .gradingform_erubric .enrichedcriterion .levels .enrichedlevel {
     vertical-align: bottom;
-    border-left: 1px solid #ddd !important;
+    border-left: 1px solid #ddd;
     max-width: 150px;
 }
 
@@ -474,13 +474,13 @@
 
 /* Importance needed when student views evaluation. */
 .gradingform_erubric .enrichedcriterion .levels .enrichedlevel.last {
-    border-right: 1px solid #ddd !important;
+    border-right: 1px solid #ddd;
 }
 
 .gradingform_erubric .plainvaluerich {
     display: inline;
     float: right;
-    color: #000
+    color: #000;
 }
 
 .gradingform_erubric .plainvaluerich.empty {
@@ -531,11 +531,11 @@
 
 /** Evaluation on enriched criteria. **/
 .gradingform_erubric .criterion .levels .level.currentenenriched:hover {
-    background: transparent !important
+    background: transparent;
 }
 
 .gradingform_erubric .criterion .levels .level.currentchecked.currentenenriched:hover {
-    background: #fff0f0 !important
+    background: #fff0f0;
 }
 
 .gradingform_erubric.evaluate .criterion .levels .level:hover {
@@ -591,7 +591,7 @@
 .gradingform_erubric.editor .addlevel input {
     background: transparent url([[pix:t/add]]) no-repeat;
     display: block;
-    color: #555555;
+    color: #555;
     font-weight: bold;
     text-decoration: none;
 }
@@ -637,8 +637,6 @@
 }
 
 /** Errors & Warnings **/
-.gradingform_erubric_editform .generalbox .missingmodule,
-
 /* Warning message during editing on top of rubric form */
 .gradingform_erubric_editform .errormessage {
     border: 1px dashed #f00;
@@ -647,7 +645,7 @@
 
 /* Missing course module from enriched criteria */
 .gradingform_erubric .enrichedcriterion .rich span.missing {
-    color: #ff0000;
+    color: #f00;
     padding-left: 23px;
     background: transparent url([[pix:i/risk_xss]]) no-repeat left;
 }
@@ -658,7 +656,7 @@
 .gradingform_erubric .enrichedcriterion .levels .enrichedlevel .richvalue.error,
 .gradingform_erubric .enrichedcriterion .rich .error,
 .gradingform_erubric .enrichedcriterion .rich.error {
-    background: #ffdddd;
+    background: #fdd;
 }
 
 /* Missing course modules message on top of the rubric in edit form */
@@ -700,13 +698,13 @@
 .gradingform_erubric .criterion .description.error,
 .gradingform_erubric .criterion .levels .level .definition.error,
 .gradingform_erubric .criterion .levels .level .score.error {
-    background: #ffdddd;
+    background: #fdd;
 }
 
 /* Restored rubric message box */
 .gradingform_erubric-restored {
     padding: 10px;
-    background: #ffffdd;
+    background: #ffd;
     border: 1px dashed #ff0;
     margin-bottom: 10px;
 }
@@ -821,7 +819,7 @@
 /** Special adjustments for better display of the form using Clean Theme **/
 /* Importance needed to fit the form into page width. */
 .gradingform_erubric_editform.clean_theme .fitemtitle {
-    width: 190px !important;
+    width: 190px;
 }
 
 .gradingform_erubric_editform.clean_theme .fitem_feditor,
@@ -836,7 +834,7 @@
 }
 
 .gradingform_erubric_editform.more_theme .felement.feditor {
-    max-width: 290px !important;
+    max-width: 290px;
 }
 
 .gradingform_erubric.more_theme.view,
@@ -865,7 +863,7 @@
         display: inline-block;
     }
     .gradingform_erubric_editform.more_theme .felement.feditor {
-        max-width: 490px !important;
+        max-width: 490px;
     }
     .gradingform_erubric.more_theme.view {
         width: 400px;
@@ -878,7 +876,7 @@
 @media (min-width: 992px) {
     /* Importance needed to fit the editor into page width. */
     .gradingform_erubric_editform.more_theme .felement.feditor {
-        max-width: 650px !important;
+        max-width: 650px;
     }
     .gradingform_erubric.more_theme.view {
         width: 570px;
@@ -891,14 +889,14 @@
 @media (min-width: 1200px) {
     /* Importance needed to fit the form into page width. */
     .gradingform_erubric_editform.clean_theme .felement {
-        margin-left: 200px !important;
+        margin-left: 200px;
     }
     .gradingform_erubric_editform.more_theme .fitemtitle {
-        width: 190px !important;
+        width: 190px;
     }
     /* Importance needed to fit the form into page width. */
     .gradingform_erubric_editform.more_theme .felement {
-        margin-left: 205px !important;
+        margin-left: 205px;
     }
     .gradingform_erubric.more_theme.view {
         width: 720px;

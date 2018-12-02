@@ -221,8 +221,8 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                  // These are the rules:
                  // 1. If one enrichment criterion is selected, all must be.
                  // 2. All course modules should be checked according to criterion type,
-                 //    ie. we can't accept resource modules for assignment(grade) check. We can only accept assignment modules!
-                 //    This should work all by itself when javascript is enabled! :)
+                 // ...ie. we can't accept resource modules for assignment(grade) check. We can only accept assignment modules!
+                 // ...This should work all by itself when javascript is enabled! :)
                  // 3.a If collaboration is checked as the criterion type, collaboration type must be also checked.
                  // 3.b if file submissions or forum replies are checked as collaboration type, chat course modules can't be chosen.
 
@@ -254,14 +254,14 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
 
                         // Check if there are any selected modules and get their type.
                         if (array_key_exists('coursemodules', $criterion) && is_array($criterion['coursemodules']) && $criterion['coursemodules']) {
-                            foreach ($criterion['coursemodules'] as $moduletype=>$values) {
+                            foreach ($criterion['coursemodules'] as $moduletype => $values) {
                                 $selectedmodulestype = $moduletype;
                                 break;
                             }
                         }
 
                         // If the selected course modules are not of the same type, establish the error.
-                        if ($selectedmodulestype && $enrichedcriteriontypes[$selectedmodulestype]!=$criteriontype) {
+                        if ($selectedmodulestype && $enrichedcriteriontypes[$selectedmodulestype] != $criteriontype) {
                             $errors['err_enrichedmoduleselection'][$id] = 1;
                             $criterion['error_coursemodules'] = true;
                         }
@@ -278,28 +278,28 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
 
                         // Check if a simple module select field of the same type is selected and then...
                         // ...update coursemodules array and remove possible error notice.
-                        if(array_key_exists($selectedmodulestype, $criterion) && $criterion[$selectedmodulestype]) {
+                        if (array_key_exists($selectedmodulestype, $criterion) && $criterion[$selectedmodulestype]) {
 
                             // If previous modules where not of the same kind, reset them and establish new coursemodules array.
                             if (array_key_exists('err_enrichedmoduleselection', $errors) && $errors['err_enrichedmoduleselection'][$id]) {
-                                $criterion['coursemodules'] = array($selectedmodulestype=>array($criterion[$selectedmodulestype]));
+                                $criterion['coursemodules'] = array($selectedmodulestype => array($criterion[$selectedmodulestype]));
                                 unset($errors['err_enrichedmoduleselection'][$id]);
                                 unset($criterion['error_coursemodules']);
 
-                            // If the course modules array has appropriate values, or is empty...
-                            }else{
+                                // If the course modules array has appropriate values, or is empty...
+                            } else {
                                 // If course modules array exists...
                                 if (array_key_exists('coursemodules', $criterion) && is_array($criterion['coursemodules']) && $criterion['coursemodules']) {
                                     array_push($criterion['coursemodules'][$selectedmodulestype], $criterion[$selectedmodulestype]);
-                                // If course modules array is null...
-                                }else{
-                                    $criterion['coursemodules'] = array($selectedmodulestype=>array($criterion[$selectedmodulestype]));
+                                    // If course modules array is null...
+                                } else {
+                                    $criterion['coursemodules'] = array($selectedmodulestype => array($criterion[$selectedmodulestype]));
                                 }
                             }
                         }
 
                         // Reset simple selects.
-                        foreach ($enrichedcriteriontypes as $type=>$valueid) {
+                        foreach ($enrichedcriteriontypes as $type => $valueid) {
                             $tempid = array_search($type, $allrichcriteria);
                             unset($allrichcriteria[$tempid]); // Don't need them any more.
                         }
@@ -307,23 +307,23 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                         // If collaboration criterion type is selected, Rule No.3 is processed...
                         // Check 3.a first...
                         // ...****CHECK FOR RULE NO.3.a****...
-                        if ($criterion['criteriontype']== gradingform_erubric_controller::INTERACTION_TYPE_COLLABORATION) {
+                        if ($criterion['criteriontype'] == gradingform_erubric_controller::INTERACTION_TYPE_COLLABORATION) {
 
                             // If collaboration type is not selected, establish the error.
                             if (!array_key_exists('collaborationtype', $criterion) || !$criterion['collaborationtype']) {
                                 $errors['err_enrichedcriterionmissing'][$id] = 1;
                                 $criterion['error_collaborationtype'] = true;
 
-                            // Check 3.b as long as 3.a is ok, and there are course modules selected.
-                            // ...****CHECK FOR RULE NO.3.b****...
-                            }else if (array_key_exists('coursemodules', $criterion) && !array_key_exists('error_coursemodules', $criterion) &&
+                                // Check 3.b as long as 3.a is ok, and there are course modules selected.
+                                // ...****CHECK FOR RULE NO.3.b****...
+                            } else if (array_key_exists('coursemodules', $criterion) && !array_key_exists('error_coursemodules', $criterion) &&
                                       ($criterion['collaborationtype'] == gradingform_erubric_controller::COLLABORATION_TYPE_FILE_ADDS ||
                                        $criterion['collaborationtype'] == gradingform_erubric_controller::COLLABORATION_TYPE_REPLIES)) {
 
                                 $temparray = array();
                                 if (is_array($criterion['coursemodules'][$selectedmodulestype][0])) { // Already saved criterion.
                                     $temparray = $criterion['coursemodules'][$selectedmodulestype][0];
-                                }else{ // Currently submited data.
+                                } else { // Currently submited data.
                                     $temparray = $criterion['coursemodules'][$selectedmodulestype];
                                 }
 
@@ -333,21 +333,22 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                                     $tempinstance = explode('->', $mdlinstance);
                                     $moduletype = (int)$tempinstance[0];
                                     // If there are any chat course modules selected establish the error.
-                                    if ($moduletype==$renderer->chatmoduleid) {
+                                    if ($moduletype == $renderer->chatmoduleid) {
                                         $errors['err_collaborationhoice'][$id] = 1;
                                         $criterion['error_collaborationmodules'] = true;
                                     }
                                 }
                             }
-                        }else{
+                        } else {
                             // If collaborationtype is selected (when not needed), establish the error.
                             if (array_key_exists('collaborationtype', $criterion) && $criterion['collaborationtype']) {
                                 $errors['err_collaborationtypeneedless'][$id] = 1;
                                 $criterion['error_collaborationtype'] = true;
                             }
                         }
-
-                    }else{ // Even if the criterion type is not selected, handle the course modules.
+                        
+						// Even if the criterion type is not selected, handle the course modules.
+                    } else {
 
                         // If course modules are selected, don't check simple course modules selects.
                         if (array_key_exists('coursemodules', $criterion)) {
@@ -356,9 +357,9 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                                 unset($allrichcriteria[$tempid]); // Don't need them any more!
                             }
 
-                        // Else if at least one simple course module select is selected, trick the procedure bellow...
-                        // ...so that coursemodules array is ok... ;)
-                        }else{
+                            // Else if at least one simple course module select is selected, trick the procedure bellow...
+                            // ...so that coursemodules array is ok...
+                        } else {
                             foreach ($enrichedcriteriontypes as $type => $valueid) {
                                 $tempid = array_search($type, $allrichcriteria);
                                 unset($allrichcriteria[$tempid]); // Don't need it any more!
@@ -388,14 +389,14 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                     $criterionwithmodule = explode('-', $criterion['deletemodule']);
 
                     // Remove the module.
-                    foreach($criterion['coursemodules'][$criterionwithmodule[3]] as $key=>$valueid) {
-                        if ($valueid==$criterionwithmodule[4].'->'.$criterionwithmodule[5]) {
+                    foreach ($criterion['coursemodules'][$criterionwithmodule[3]] as $key => $valueid) {
+                        if ($valueid == $criterionwithmodule[4].'->'.$criterionwithmodule[5]) {
                             unset($criterion['coursemodules'][$criterionwithmodule[3]][$key]);
                         }
                     }
 
                     // If the last module is deleted, delete the entire coursemodules array.
-                    if (count($criterion['coursemodules'][$criterionwithmodule[3]])==0) {
+                    if (count($criterion['coursemodules'][$criterionwithmodule[3]]) == 0) {
                         unset($criterion['coursemodules']);
                     }
 
@@ -449,8 +450,8 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                                     $errors['err_enrichedvaluemissing'] = 1;
                                     $level['error_enrichedvalue'] = true;
 
-                                // If enriched value is anything but a positive integer number, establish the error.
-                                }else if (!preg_match('#^[\+]?\d*$#', $evalue)) {
+                                    // If enriched value is anything but a positive integer number, establish the error.
+                                } else if (!preg_match('#^[\+]?\d*$#', $evalue)) {
                                     $errors['err_enrichedvalueformat'] = 1;
                                     $level['error_enrichedvalue'] = true;
                                 }
@@ -610,8 +611,8 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
      * @param boolean $assoc
      * @return array
      */
-    public function exportValue(&$submitValues, $assoc = false) {
-        $value = $this->prepare_data($this->_findValue($submitValues));
+    public function exportvalue(&$submitvalues, $assoc = false) {
+        $value = $this->prepare_data($this->_findValue($submitvalues));
         return $this->_prepareValue($value, $assoc);
     }
 }
