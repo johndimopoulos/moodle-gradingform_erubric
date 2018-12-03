@@ -15,10 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language file for plugin gradingform_erubric
+ * Learning Analytics Enriched Rubric (e-rubric) - Language File EN (English)
  *
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * This file contains all the language strings, which are used in this plugin.
+ *
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -178,11 +180,11 @@ $string['err_novariationsvalues'] = 'Enriched criteria, must have different chec
 $string['needregrademessage'] = 'The enriched rubric definition was changed after this student had been graded.
     The student can not see this enriched rubric until you update the current grade.';
 $string['regrademessage1'] = '<p style="text-align:center;color:red;font-weight:bold">WARNING!</p>
-	You are about to save changes to an enriched rubric that has already been used for grading.
+    You are about to save changes to an enriched rubric that has already been used for grading.
     Please indicate if existing grades need to be reviewed.
     If you set this then the enriched rubric will be hidden from students until their item is regraded.';
 $string['regrademessage2'] = '<p style="text-align:center;color:red;font-weight:bold">WARNING!</p>
-	You are about to save significant changes to an enriched rubric that has already been used for grading.
+    You are about to save significant changes to an enriched rubric that has already been used for grading.
     The gradebook value will be unchanged, but the enriched rubric will be hidden from students until their item is regraded.';
 $string['regradeoption0'] = 'Do not mark for regrade';
 $string['regradeoption1'] = 'Mark for regrade';

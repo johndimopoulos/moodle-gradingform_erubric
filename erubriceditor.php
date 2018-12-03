@@ -15,10 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * File contains definition of class MoodleQuickForm_erubriceditor
+ * Learning Analytics Enriched Rubric (e-rubric) - Edit Form Data Processing
  *
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * This file contains the HTML_QuickForm_input class, which is used for all data processing, during form submission.
+ *
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -38,8 +40,8 @@ require_once("HTML/QuickForm/input.php");
  * If Javascript is disabled when one of those special buttons is pressed, the form
  * element is not validated and, instead of submitting the form, we process button presses.
  *
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -346,8 +348,8 @@ class MoodleQuickForm_erubriceditor extends HTML_QuickForm_input {
                                 $criterion['error_collaborationtype'] = true;
                             }
                         }
-                        
-						// Even if the criterion type is not selected, handle the course modules.
+
+                        // Even if the criterion type is not selected, handle the course modules.
                     } else {
 
                         // If course modules are selected, don't check simple course modules selects.

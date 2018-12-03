@@ -15,10 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The form used at the rubric editor page is defined here
+ * Learning Analytics Enriched Rubric (e-rubric) - Edit Form Definition
  *
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * This file defines the edit form class for the e-rubric, which is later used by edit.php to be published.
+ *
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -32,8 +34,8 @@ MoodleQuickForm::registerElementType('erubriceditor', $CFG->dirroot.'/grade/grad
 /**
  * Defines the enriched rubric edit form
  *
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -108,7 +110,7 @@ class gradingform_erubric_editrubric extends moodleform {
     }
 
     /**
-     * Form vlidation.
+     * Form validation.
      * If there are errors return array of errors ("fieldname"=>"error message"),
      * otherwise true if ok.
      *

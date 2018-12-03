@@ -15,10 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file keeps track of upgrades to plugin gradingform_erubric
+ * Learning Analytics Enriched Rubric (e-rubric) - Upgrade
  *
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * This file keeps track of upgrades to plugin gradingform_erubric.
+ *
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2018 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,7 +28,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Keeps track or rubric plugin upgrade path
+ * Keeps track of e-rubric plugin upgrade path
  *
  * @param int $oldversion the DB version of currently installed plugin
  * @return bool true

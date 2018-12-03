@@ -15,10 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Learning Analytics Enriched Rubric editor page
+ * Learning Analytics Enriched Rubric (e-rubric) - Edit Form Post
  *
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * This file publishes the edit form for the e-rubric, which is defined in edit_form.php.
+ *
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

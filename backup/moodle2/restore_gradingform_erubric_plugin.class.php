@@ -15,16 +15,26 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Learning Analytics Enriched Rubric (e-rubric) - Restore
+ *
  * Restores the learning analytics enriched rubric specific data from grading.xml file.
  *
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * This class contains all necessary definitions needed for a successful restore of all e-rubric data.
+ *
+ * @package    gradingform_erubric
+ * @category   grading
+ * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class restore_gradingform_erubric_plugin extends restore_gradingform_plugin {
 
     /**

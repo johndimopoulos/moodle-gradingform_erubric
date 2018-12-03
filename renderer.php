@@ -15,10 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Contains renderer used for displaying e-rubric
+ * Learning Analytics Enriched Rubric (e-rubric) - e-Rubric Renderer
  *
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * Contains renderer functions that are used for displaying the e-rubric.
+ *
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -32,27 +34,30 @@ require_once($CFG->libdir.'/resourcelib.php');
 /**
  * Grading method plugin renderer
  *
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class gradingform_erubric_renderer extends plugin_renderer_base {
 
-    // Array to encapsulate the course resources (Book, File, URL etc.) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'.
+    /** Array to encapsulate the course resources (Book, File, URL etc.) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'. */
     protected $resources = array();
-    // Array to encapsulate the course assignments (moodle 2.2 & 2.3 compatible) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'.
+    /** Array to encapsulate the course assignments (moodle 2.2 & 2.3 compatible) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'. */
     protected $assignments = array();
-    // Array to encapsulate the course activities (of type forum or chat) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'.
+    /** Array to encapsulate the course activities (of type forum or chat) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'. */
     protected $activities = array();
-    // Array to encapsulate the icons for all this course's resources, assignments and activities (defined in here), as 'moduleid' => 'htmlimagestring' .
+    /** Array to encapsulate the icons for all this course's resources, assignments and activities (defined in here), as 'moduleid' => 'htmlimagestring'. */
     public $moduleicon = array();
-    // Boolean to show missing course modules error message.
+    /** Boolean to show missing course modules error message. */
     protected $missingmodules = null;
 
     // Define the modules (chat-forum-old assignment-new assignment) ids that will be retrieved from modules table during _contruct.
-    public $chatmoduleid         = null; // Make this public to use in erubriceditor.php.
+    /** The chat module id. Make this public to use in erubriceditor.php. */
+    public $chatmoduleid         = null;
+    /** The forum module id. */
     protected $forummoduleid     = null;
+    /** The assign module id (New type assignments). */
     protected $newassignmoduleid = null;
     /**
      * Constructor
@@ -109,8 +114,9 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * moduleactivitiesids array.
      * This function also calls the update function for the icons array of these course modules.
      *
-     * @param array $moduleicons the renderer's icons for modules used
      * @param string $mdtype the type description of the course module
+     * @param array $moduleicons the renderer's icons for modules used
+     * @return array of course_module_id -> module_instance_id
      */
     private function get_modules_array($mdtype, &$moduleicons) {
 
@@ -391,7 +397,8 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * Also JavaScript relies on the class names of elements and when developer changes them
      * script might stop working.
      *
-     * @param int $mode enriched rubric display mode @see gradingform_erubric_controller
+     * @param int $mode enriched rubric display mode, see {@link gradingform_erubric_controller}
+     * @param array $options display options for this rubric, defaults are: {@link gradingform_erubric_controller::get_default_options()}
      * @param string $elementname the name of the form element (in editor mode) or the prefix for div ids (in view mode)
      * @param array|null $criterion criterion data
      * @param string $levelsstr evaluated templates for this criterion levels
@@ -873,7 +880,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * Also JavaScript relies on the class names of elements and when developer changes them
      * script might stop working.
      *
-     * @param int $mode rubric display mode @see gradingform_erubric_controller
+     * @param int $mode rubric display mode as defined in gradingform_erubric_controller
      * @param array $options display options for this rubric, defaults are: {@link gradingform_erubric_controller::get_default_options()}
      * @param string $elementname the name of the form element (in editor mode) or the prefix for div ids (in view mode)
      * @param string|int $criterionid either id of the nesting criterion or a macro for template
@@ -1046,7 +1053,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * Also JavaScript relies on the class names of elements and when developer changes them
      * script might stop working.
      *
-     * @param int $mode rubric display mode @see gradingform_erubric_controller
+     * @param int $mode rubric display mode as defined in gradingform_erubric_controller
      * @param array $options display options for this rubric, defaults are: {@link gradingform_erubric_controller::get_default_options()}
      * @param string $elementname the name of the form element (in editor mode) or the prefix for div ids (in view mode)
      * @param string|int $criterionid either id of the nesting criterion or a macro for template
@@ -1161,11 +1168,11 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * Also JavaScript relies on the class names of elements and when developer changes them
      * script might stop working.
      *
-     * @param int $mode rubric display mode @see gradingform_erubric_controller
+     * @param int $mode rubric display mode as defined in gradingform_erubric_controller
      * @param array $options display options for this rubric, defaults are: {@link gradingform_erubric_controller::get_default_options()}
      * @param string $elementname the name of the form element (in editor mode) or the prefix for div ids (in view mode)
      * @param string $criteriastr evaluated templates for this rubric's criteria
-     * @param int $criteriastr the maximum number of levels this rubric has
+     * @param int $maxcriterialevels the maximum number of levels this rubric has
      * @return string
      */
     protected function erubric_template($mode, $options, $elementname, $criteriastr, $maxcriterialevels) {
@@ -2154,12 +2161,13 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * If a valid value results, it gets converted to float and added to the corresponding variable.
      * If not, the corresponding variable remains as is.
      *
-     * @param float/array &$var the corresponded variable
+     * @param float/array $var the corresponded variable
      * @param string $sqlstr the initial sql string to begin the query
      * @param string $table the enriched criterion operator
      * @param string $col the assortment of levels according to enriched rubric options
      * @param string $from the begin time for a potential time stamp
      * @param string $until the end time for a potential time stamp
+     * @param int $totals the total number of module instances
      */
     protected function get_value_from_learning_analytics(&$var, $sqlstr, $table, $col, $from, $until, $totals) {
         GLOBAL $DB;
@@ -2207,7 +2215,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * of all students existing actively in a specific course module and updates their number.
      * Only users of 'student' role are accounted and only those existing in a potentially active period of time(defined by timestamps).
      *
-     * @param int &$count the number of students found
+     * @param int $count the number of students found
      * @param string $sqlstr the initial sql string to begin the query
      * @param string $table the enriched criterion operator
      * @param string $col the assortment of levels according to enriched rubric options
@@ -2242,6 +2250,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * @param int $instanceid the chat instance id
      * @param string $from the begin time for a potential time stamp
      * @param string $until the end time for a potential time stamp
+     * @param string $selectallstudents an addition to SQL Query for including all enrolled students
      * @return array
      */
     protected function get_interacted_users_according_to_chat_sessions($instanceid, $from, $until, $selectallstudents) {
@@ -2390,7 +2399,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * Displays one grading instance.
      *
      * @param gradingform_erubric_instance $instance
-     * @param int idx unique number of instance on page
+     * @param int $idx unique number of instance on page
      * @param boolean $cangrade whether current user has capability to grade in this context
      */
     public function display_instance(gradingform_erubric_instance $instance, $idx, $cangrade) {

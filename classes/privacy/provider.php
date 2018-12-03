@@ -15,10 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file contains the grading method interface and privacy class for requesting user data.
+ * Learning Analytics Enriched Rubric (e-rubric) - Privacy Provider
  *
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * This file contains the grading method interface and privacy class for handling and processing user data.
+ *
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2018 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -30,6 +32,14 @@ defined('MOODLE_INTERNAL') || die();
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\transform;
 
+/**
+ * This class contains all necessary functions needed for describing, exporting and deleting user data.
+ *
+ * @package    gradingform_erubric
+ * @category   grading
+ * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class provider implements
     \core_privacy\local\metadata\provider,
     \core_privacy\local\request\plugin\subsystem_provider,

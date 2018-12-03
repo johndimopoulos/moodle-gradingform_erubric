@@ -15,10 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Grading method controller for the Learning Analytics Enriched Rubric plugin
+ * Learning Analytics Enriched Rubric (e-rubric) - Gradingform Controller
  *
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * Grading method controller for the Learning Analytics Enriched Rubric plugin.
+ *
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,9 +30,10 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot.'/grade/grading/form/lib.php');
 
 /**
- * This controller encapsulates the enriched rubric grading logic
- * @package    gradingform
- * @subpackage Learning Analytics Enriched Rubric (e-rubric)
+ * This controller encapsulates the enriched rubric grading logic.
+ *
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -54,17 +57,28 @@ class gradingform_erubric_controller extends gradingform_controller {
     const DISPLAY_VIEW          = 7;
 
     // Constants used for enriched rubric default field values.
-    const INTERACTION_TYPE_COLLABORATION   = 1; // Select student Collaboration for cooperation check (needed in erubriceditor.js).
-    const INTERACTION_TYPE_GRADE           = 2; // Select student Grade for performance check (needed in erubriceditor.js).
-    const INTERACTION_TYPE_STUDY           = 3; // Select student Study for research - study check (needed in erubriceditor.js).
-    const COLLABORATION_TYPE_ENTRIES       = 1; // Select student Collaboration Entries for simple log entries.
-    const COLLABORATION_TYPE_FILE_ADDS     = 2; // Select student Collaboration File adds for number of files submited.
-    const COLLABORATION_TYPE_REPLIES       = 3; // Select student Collaboration Replies for number of replies to others.
-    const COLLABORATION_TYPE_INTERACTIONS  = 4; // Select student Collaboration Interactions for number of colleagues interacted.
-    const OPERATOR_EQUAL                   = 1; // Select query operator for equal.
-    const OPERATOR_MORE_THAN               = 2; // Select query operator for more than.
-    const REFERENCE_STUDENT                = 1; // Select query reference for particular student.
-    const REFERENCE_STUDENTS               = 2; // Select query reference according to students overall percent.
+    /** Select student Collaboration for cooperation check (needed in erubriceditor.js). */
+    const INTERACTION_TYPE_COLLABORATION   = 1;
+    /** Select student Grade for performance check (needed in erubriceditor.js). */
+    const INTERACTION_TYPE_GRADE           = 2;
+    /** Select student Study for research - study check (needed in erubriceditor.js). */
+    const INTERACTION_TYPE_STUDY           = 3;
+    /** Select student Collaboration Entries for simple log entries. */
+    const COLLABORATION_TYPE_ENTRIES       = 1;
+    /** Select student Collaboration File adds for number of files submited. */
+    const COLLABORATION_TYPE_FILE_ADDS     = 2;
+    /** Select student Collaboration Replies for number of replies to others. */
+    const COLLABORATION_TYPE_REPLIES       = 3;
+    /** Select student Collaboration Interactions for number of colleagues interacted. */
+    const COLLABORATION_TYPE_INTERACTIONS  = 4;
+    /** Select query operator for equal. */
+    const OPERATOR_EQUAL                   = 1;
+    /** Select query operator for more than. */
+    const OPERATOR_MORE_THAN               = 2;
+    /** Select query reference for particular student. */
+    const REFERENCE_STUDENT                = 1;
+    /** Select query reference according to students overall percent. */
+    const REFERENCE_STUDENTS               = 2;
 
     /**
      * Extends the module settings navigation with the enriched rubric grading settings.
@@ -877,13 +891,14 @@ class gradingform_erubric_controller extends gradingform_controller {
  *
  * Stores information and performs actions like update, copy, validate, submit, etc.
  *
- * @package    gradingform
- * @name       Learning Analytics Enriched Rubric
+ * @package    gradingform_erubric
+ * @category   grading
  * @copyright  2012 John Dimopoulos
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class gradingform_erubric_instance extends gradingform_instance {
 
+    /** The e-rubric object which stores all it's data. */
     protected $erubric;
 
     /**
