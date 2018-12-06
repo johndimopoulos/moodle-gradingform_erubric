@@ -245,7 +245,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * @return string
      */
     public function criterion_template($mode, $options, $elementname = '{NAME}', $criterion = null, $levelsstr = '{LEVELS}', $value = null) {
-        // TODO description format, remark format
+        // TODO description format, remark format.
         if ($criterion === null || !is_array($criterion) || !array_key_exists('id', $criterion)) {
             $criterion = array('id' => '{CRITERION-id}',
                                'description' => '{CRITERION-description}',
@@ -768,7 +768,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                 // In case of evaluation, put value in hidden field to update enriched rubric fillings.
                 if (($mode == gradingform_erubric_controller::DISPLAY_EVAL || $mode == gradingform_erubric_controller::DISPLAY_EVAL_FROZEN)) {
                     // Criterion benchmark.
-                    if (strlen((String)$criterion['enrichedbenchmark'])>0) {
+                    if (strlen((String)$criterion['enrichedbenchmark']) > 0) {
                         $benchmarkstr .= html_writer::empty_tag('input',
                                             array('type' => 'hidden',
                                                   'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmark]',
@@ -780,7 +780,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                                   'value' => ''));
                     }
                     // Student benchmark.
-                    if (strlen((String)$criterion['enrichedbenchmarkstudent'])>0) {
+                    if (strlen((String)$criterion['enrichedbenchmarkstudent']) > 0) {
                         $benchmarkstr .= html_writer::empty_tag('input',
                                             array('type' => 'hidden',
                                                   'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmarkstudent]',
@@ -792,7 +792,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                                   'value' => ''));
                     }
                     // Students benchmark.
-                    if (strlen((String)$criterion['enrichedbenchmarkstudents'])>0) {
+                    if (strlen((String)$criterion['enrichedbenchmarkstudents']) > 0) {
                         $benchmarkstr .= html_writer::empty_tag('input',
                                             array('type' => 'hidden',
                                                   'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmarkstudents]',
@@ -904,7 +904,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
         // Get level index.
         $levelindex = isset($level['index']) ? $level['index'] : '{LEVEL-index}';
 
-        // Template for one level within one criterion
+        // Template for one level within one criterion.
         $tdattributes = array(
             'id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}',
             'class' => 'level' . $level['class']
@@ -1179,7 +1179,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
 
         // CSS suffix for class of the main div. Depends on the mode, theme and language (for Greek).
         $lang = current_language();
-        $classsuffix = ($lang == 'el')? ' hellenic' : '';
+        $classsuffix = ($lang == 'el') ? ' hellenic' : '';
         Global $PAGE;
 
         switch ($mode) {
@@ -1441,13 +1441,13 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                         // Uncheck level in order not to affect enriched levels.
                         unset($level['checked']);
 
-                    // Enrichment evaluation successful, freeze levels!
+                        // Enrichment evaluation successful, freeze levels!
                     } else {
                         $level['class'] .= ' currentenenriched';
                         $levelsstr .= $this->level_template(gradingform_erubric_controller::DISPLAY_EVAL_FROZEN, $options, $elementname, $id, $level);
                     }
 
-                // Simple criteria.
+                    // Simple criteria.
                 } else {
 
                     $level['checked'] = (isset($criterionvalue['levelid']) && ((int)$criterionvalue['levelid'] === $levelid));
@@ -1531,7 +1531,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
         // If en External Logstore is used and both Legacy and new Internal logs are deactivated, do nothing, ...
         // ...as we can't know in advance how the new external logs are stored and how the store's log tables are structured.
 
-        // Set the necessary variables
+        // Set the necessary variables.
         $uselegacyreader        = true;
         $useinternalreader      = null;
         $minloginternalreader   = null;
@@ -1544,10 +1544,10 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             list($uselegacyreader, $useinternalreader, $minloginternalreader, $logtable) = report_outline_get_common_log_variables();
         }
 
-        // ...**** For moodle 2.2 versions assignment modules ****... //
+        // ...**** For moodle 2.2 versions assignment modules ****...
         $studentid = $pageparams['userid'];
 
-        // ...**** For moodle 2.3 onwards assignment module ****... //
+        // ...**** For moodle 2.3 onwards assignment module ****...
         if (!$studentid) {
             require_once($CFG->dirroot . '/mod/assign/locallib.php');
             $context = context_module::instance($PAGE->cm->id);
@@ -1578,7 +1578,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                         AND crse.id = $courseid)";
 
         // Timestamp enrichment calculations according to assignment module.
-        if ($curmoduleid==$this->newassignmoduleid) {
+        if ($curmoduleid == $this->newassignmoduleid) {
             // Get potential enrichment due date.
             if ($options['timestampenrichmentend']) {
                 $sql = 'SELECT asmnt.duedate AS duedate FROM {assign} asmnt WHERE asmnt.id = '.$gradingmoduleid;
@@ -1612,7 +1612,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                     AND cm.course = $courseid
                                     AND cm.module = $moduleid
                                     AND cm.instance = $instanceid ";
-                    } else if  ($useinternalreader) { // New log.
+                    } else if ($useinternalreader) { // New log.
                         $sql = "SELECT COUNT(lg.id) AS TOTALS
                                 FROM {" . $logtable . "} lg
                                     INNER JOIN {modules} mdls ON (lg.objecttable = mdls.name)
@@ -1764,7 +1764,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                             AND cm.course = $courseid
                                             AND cm.module = $moduleid
                                             AND cm.instance = $instanceid ";
-                            } else if  ($useinternalreader) { // New log.
+                            } else if ($useinternalreader) { // New log.
                                 // There is no direct way to get both posts and talks from the new log...
                                 // ...according to the module id (forum or chat) and instance id (forum id or chat id),
                                 // ...so we must seperate the original log query with two different queries...
@@ -1781,8 +1781,8 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                                 AND fdcs.forum = $instanceid ";
                                     $logtablename = 'fp';
                                     $timefield = 'created';
-                                // Else only if this is a chat course module.
-                                } else if  ($moduleid == $this->chatmoduleid) {
+                                    // Else only if this is a chat course module.
+                                } else if ($moduleid == $this->chatmoduleid) {
                                     $sql = "SELECT COUNT(chms.id) AS TOTALS
                                             FROM {chat_messages} chms
                                             WHERE   chms.userid $selectindividual
@@ -1827,11 +1827,11 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
 
                                         $this->get_value_from_learning_analytics($benchmarkstudents, $sql, 'lg', 'time', $fromtime, $untiltime, $count);
                                     }
-                                } else if  ($useinternalreader) { // New log.
+                                } else if ($useinternalreader) { // New log.
                                     // There is no direct way to get both posts and talks from the new log...
                                     // ...according to the module id (forum or chat) and instance id (forum id or chat id),...
                                     // ...so we must separate the original log query with two different queries that don't have to refer to the new log any more.
-                                    // Bye bye new log... Bummer :(
+                                    // Bye bye new log... Bummer :(.
 
                                     // If this is a forum course module.
                                     if ($moduleid == $this->forummoduleid) {
@@ -1858,7 +1858,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                             $this->get_value_from_learning_analytics($benchmarkstudents, $sql, $logtablename, $timefield, $fromtime, $untiltime, $count);
                                         }
 
-                                    // Else only if this is a chat course module.
+                                        // Else only if this is a chat course module.
                                     } else if ($moduleid == $this->chatmoduleid) {
                                         $logtablename = 'chms';
                                         $timefield = 'timestamp';
@@ -2029,13 +2029,13 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                                         (!isset($distinctusersfound[$studentid]) ||
                                                             !in_array($tempid->usersid, $distinctusersfound[$studentid]))) {
                                                                 $distinctusersfound[$studentid][] = $tempid->usersid;
-                                                        }
+                                                    }
                                                 }
                                             }
                                         }
 
-                                    // Check all students along with the current student evaluated, if there are any.
-                                    } else if(!is_null($tempusersarray)) {
+                                        // Check all students along with the current student evaluated, if there are any.
+                                    } else if (!is_null($tempusersarray)) {
                                         // Check all participating students in order to create and update...
                                         // ...each one's unique pile of interactions.
                                         foreach ($tempusersarray as $tempcurrentid) { // Loop A.
@@ -2045,11 +2045,11 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                                 // ...add to pile (of user A).
                                                 if (isset($tempid->usersid) &&
                                                     isset($tempcurrentid->usersid) &&
-                                                    $tempid->usersid!=$tempcurrentid->usersid &&
+                                                    $tempid->usersid != $tempcurrentid->usersid &&
                                                     (!isset($distinctusersfound[$tempcurrentid->usersid]) ||
                                                         !in_array($tempid->usersid, $distinctusersfound[$tempcurrentid->usersid]))) {
                                                             $distinctusersfound[$tempcurrentid->usersid][] = $tempid->usersid;
-                                                        }
+                                                }
                                             }
                                         }
                                     }
@@ -2068,11 +2068,11 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                         if (in_array($studentid, $tempsession)) {
                                             foreach ($tempsession as $tempuserid) {
                                                 // If student's id is in current session and temp user id not the same with the student's and is unique, add to pile.
-                                                if ($tempuserid!=$studentid &&
+                                                if ($tempuserid != $studentid &&
                                                     (!isset($distinctusersfound[$studentid]) ||
                                                     !in_array($tempuserid, $distinctusersfound[$studentid]))) {
                                                         $distinctusersfound[$studentid][] = $tempuserid;
-                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -2090,10 +2090,10 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                             if (in_array($tempuserid1, $tempsession)) {
                                                 foreach ($tempsession as $tempuserid2) {
                                                     // If student's id is in current session and temp user id not the same with the student's and is unique, add to pile.
-                                                    if ($tempuserid1!=$tempuserid2 &&
+                                                    if ($tempuserid1 != $tempuserid2 &&
                                                         (!isset($distinctusersfound[$tempuserid1]) || !in_array($tempuserid2, $distinctusersfound[$tempuserid1]))) {
                                                             $distinctusersfound[$tempuserid1][] = $tempuserid2;
-                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -2117,7 +2117,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS) { // Check all students participated.
                 $benchmarkstudents = 0;
                 $iterations = count($distinctusersfound);
-                foreach ($distinctusersfound as $tempstudentid=>$otherstudents) {
+                foreach ($distinctusersfound as $tempstudentid => $otherstudents) {
                     $benchmarkstudents += count($distinctusersfound[$tempstudentid]);
                 }
             }
@@ -2128,7 +2128,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             if ($criterion['collaborationtype'] <> gradingform_erubric_controller::COLLABORATION_TYPE_INTERACTIONS &&
                 ($criterion['criteriontype'] == gradingform_erubric_controller::INTERACTION_TYPE_GRADE ||
                  $criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS)) {
-                    $benchmarkstudent = $iterations? (float)round($benchmarkstudent/$iterations, 2) : null;
+                    $benchmarkstudent = $iterations ? (float)round($benchmarkstudent / $iterations, 2) : null;
             }
 
             if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS) { // Check students benchmark.
@@ -2262,13 +2262,13 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
         // If there is a from timestamp for the messages, add it.
         if ($from) {
             array_push($params['fromtime'], $from);
-            $wherestatement.= "AND timestamp >= :fromtime ";
+            $wherestatement .= "AND timestamp >= :fromtime ";
         }
 
         // If there is an until timestamp for the messages, add it.
         if ($until) {
             array_push($params['untiltime'], $until);
-            $wherestatement.= "AND timestamp <= :untiltime ";
+            $wherestatement .= "AND timestamp <= :untiltime ";
         }
 
         // Get the messages.
@@ -2299,7 +2299,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                 $lasttime = $message->timestamp;
             }
 
-            // Clean up the array to contain only sessions with more than one interacted users
+            // Clean up the array to contain only sessions with more than one interacted users.
             foreach ($sessionuserids as $key => $userids) {
                 if (count($userids) < 2) {
                     unset ($sessionuserids[$key]);

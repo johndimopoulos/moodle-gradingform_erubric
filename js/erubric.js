@@ -11,11 +11,11 @@ M.gradingform_erubric.init = function(Y, options) {
     Y.on('key', M.gradingform_erubric.levelclick, '#erubric-' + options.name + ' .level', 'enter', Y, options.name);
 
     Y.all('#erubric-' + options.name + ' .radio').setStyle('display', 'none');
-    Y.all('#erubric-' + options.name + ' .level').each( function (node) {
-    // Only for not enriched levels.
-    if (!node.hasClass('currentenenriched') && node.one('input[type=radio]').get('checked')) {
-        node.addClass('checked');
-    }
+    Y.all('#erubric-' + options.name + ' .level').each( function(node) {
+        // Only for not enriched levels.
+        if (!node.hasClass('currentenenriched') && node.one('input[type=radio]').get('checked')) {
+            node.addClass('checked');
+        }
     });
 
     // Change rubric container width according to the number of maximum levels, for better fit.
@@ -36,7 +36,7 @@ M.gradingform_erubric.init = function(Y, options) {
     }
 };
 
-M.gradingform_erubric.levelclick = function(e, Y) {
+M.gradingform_erubric.levelclick = function(e) {
     var el = e.target;
     while (el && !el.hasClass('level')) {
         el = el.get('parentNode');
@@ -62,4 +62,4 @@ M.gradingform_erubric.levelclick = function(e, Y) {
         el.setAttribute('aria-checked', 'false');
         el.get('parentNode').all('input[type=radio]').set('checked', false);
     }
-}
+};
