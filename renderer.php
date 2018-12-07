@@ -41,23 +41,23 @@ require_once($CFG->libdir.'/resourcelib.php');
  */
 class gradingform_erubric_renderer extends plugin_renderer_base {
 
-    /** Array to encapsulate the course resources (Book, File, URL etc.) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'. */
+    // Array to encapsulate the course resources (Book, File, URL etc.) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'.
     protected $resources = array();
-    /** Array to encapsulate the course assignments (moodle 2.2 & 2.3 compatible) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'. */
+    // Array to encapsulate the course assignments (moodle 2.2 & 2.3 compatible) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'.
     protected $assignments = array();
-    /** Array to encapsulate the course activities (of type forum or chat) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'. */
+    // Array to encapsulate the course activities (of type forum or chat) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'.
     protected $activities = array();
-    /** Array to encapsulate the icons for all this course's resources, assignments and activities (defined in here), as 'moduleid' => 'htmlimagestring'. */
+    // Array to encapsulate the icons for all this course's resources, assignments and activities (defined in here), as 'moduleid' => 'htmlimagestring'.
     public $moduleicon = array();
-    /** Boolean to show missing course modules error message. */
+    // Boolean to show missing course modules error message.
     protected $missingmodules = null;
 
     // Define the modules (chat-forum-old assignment-new assignment) ids that will be retrieved from modules table during _contruct.
-    /** The chat module id. Make this public to use in erubriceditor.php. */
+    // The chat module id. Make this public to use in erubriceditor.php.
     public $chatmoduleid         = null;
-    /** The forum module id. */
+    // The forum module id.
     protected $forummoduleid     = null;
-    /** The assign module id (New type assignments). */
+    // The assign module id (New type assignments).
     protected $newassignmoduleid = null;
     /**
      * Constructor

@@ -898,7 +898,7 @@ class gradingform_erubric_controller extends gradingform_controller {
  */
 class gradingform_erubric_instance extends gradingform_instance {
 
-    /** The e-rubric object which stores all it's data. */
+    // The e-rubric object which stores all it's data.
     protected $erubric;
 
     /**
