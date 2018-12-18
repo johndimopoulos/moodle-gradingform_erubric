@@ -130,9 +130,9 @@ $string['privacy:metadata:fillings:instanceid'] = 'Ο κωδικός του στ
 $string['privacy:metadata:fillings:criterionid'] = 'Ο κωδικός κριτηρίου μιας ε-ρουμπρίκας που χρησιμοποπιήθηκε για βαθμολόγηση.';
 $string['privacy:metadata:fillings:levelid'] = 'Ο κωδικός του επιλεγμένου επιπέδου ενός κριτηρίου ε-ρουμπρίκας.';
 $string['privacy:metadata:fillings:remark'] = 'Οι παρατηρήσεις αξιολόγησης του βαθμολογητή, βάση του κριτηρίου της ε-ρουμπρίκας.';
-$string['privacy:metadata:fillings:enrichedbenchmark'] = 'Η τελική τιμή αναφοράς που προέκυψε από τα εξαγώμενα της Μαθησιακής Αναλυτικής και την Εξόρυξη Δεδομένων.';
-$string['privacy:metadata:fillings:enrichedbenchmarkstudent'] = 'Η τιμή αναφοράς του μαθητή που προέκυψε από τα εξαγώμενα της Μαθησιακής Αναλυτικής και την Εξόρυξη Δεδομένων.';
-$string['privacy:metadata:fillings:enrichedbenchmarkstudents'] = 'Η συγκεντρωτική τιμή αναφοράς των εν ενεργεία μαθητών που προέκυψε από τα εξαγώμενα της Μαθησιακής Αναλυτικής και την Εξόρυξη Δεδομένων.';
+$string['privacy:metadata:fillings:enrichedbenchmark'] = 'Η τελική τιμή αναφοράς που προέκυψε από τα εξαγόμενα της Μαθησιακής Αναλυτικής και την Εξόρυξη Δεδομένων.';
+$string['privacy:metadata:fillings:enrichedbenchmarkstudent'] = 'Η τιμή αναφοράς του μαθητή που προέκυψε από τα εξαγόμενα της Μαθησιακής Αναλυτικής και την Εξόρυξη Δεδομένων.';
+$string['privacy:metadata:fillings:enrichedbenchmarkstudents'] = 'Η συγκεντρωτική τιμή αναφοράς των εν ενεργεία μαθητών που προέκυψε από τα εξαγόμενα της Μαθησιακής Αναλυτικής και την Εξόρυξη Δεδομένων.';
 
 // LA e-rubric enrichment help icon.
 $string['enrichment'] = 'Εμπλουτισμός';
@@ -197,7 +197,7 @@ $string['benchmarkinfo'] = 'Αποτελέσματα Μαθησιακής Ανα
 $string['benchmarkfinal'] = 'Τελική τιμή αναφοράς μαθητή';
 $string['studentbenchmarkinfo'] = 'Τιμή αναφοράς μαθητή';
 $string['studentsbenchmarkinfo'] = 'Τιμή αναφοράς μαθητών';
-$string['benchmarkinfonull'] = 'Δεν υπάρχουν αποτελέσματα από τα εξαγώμενα της Μαθησιακής Αναλυτικής';
+$string['benchmarkinfonull'] = 'Δεν υπάρχουν αποτελέσματα από τα εξαγόμενα της Μαθησιακής Αναλυτικής';
 
 // LA e-rubric simple rubric options.
 $string['rubricoptions'] = 'Επιλογές ρουμπρίκας';
