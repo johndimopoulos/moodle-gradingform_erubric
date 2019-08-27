@@ -79,10 +79,10 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
 
         // Find and update course modules ids.
         GLOBAL $DB;
-        $this->chatmoduleid      = $DB->get_field_sql('SELECT id FROM {modules} WHERE name="chat"', null);
-        $this->forummoduleid     = $DB->get_field_sql('SELECT id FROM {modules} WHERE name="forum"', null);
-        $this->newassignmoduleid = $DB->get_field_sql('SELECT id FROM {modules} WHERE name="assign"', null);
-        $this->labelmoduleid     = $DB->get_field_sql('SELECT id FROM {modules} WHERE name="label"', null); // Use the Label module id, to exclude it from course resources.
+        $this->chatmoduleid      = $DB->get_field_sql("SELECT id FROM {modules} WHERE name='chat'", null);
+        $this->forummoduleid     = $DB->get_field_sql("SELECT id FROM {modules} WHERE name='forum'", null);
+        $this->newassignmoduleid = $DB->get_field_sql("SELECT id FROM {modules} WHERE name='assign'", null);
+        $this->labelmoduleid     = $DB->get_field_sql("SELECT id FROM {modules} WHERE name='label'", null); // Use the Label module id, to exclude it from course resources.
 
         $this->output = $page->get_renderer('core', null, $target);
         parent::__construct($page, $target);
@@ -164,7 +164,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                     foreach ($moduleactivitiesids as $i => $modid) {
                         $sql .= 'cm.module = '.$moduleactivitiesids[$i];
                         if ($i < $sizeofids - 1) {
-                            $sql .= ' || ';
+                            $sql .= ' OR ';
                         }
                     }
                     $sql .= ')';
