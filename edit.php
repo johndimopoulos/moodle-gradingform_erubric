@@ -15,19 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Learning Analytics Enriched Rubric (e-rubric) - Edit Form Post
+ * Learning Analytics Enriched Rubric editor page
  *
- * This file publishes the edit form for the e-rubric, which is defined in edit_form.php.
- *
- * @package    gradingform_erubric
- * @category   grading
- * @copyright  2012 John Dimopoulos
+ * @package    gradingform
+ * @subpackage Learinng Analytics Enriched Rubric (e-rubric)
+ * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__.'/../../../../config.php');
-require_once(__DIR__.'/lib.php');
-require_once(__DIR__.'/edit_form.php');
+require_once(dirname(dirname(dirname(dirname(dirname(__FILE__))))).'/config.php');
+require_once(dirname(__FILE__).'/lib.php');
+require_once(dirname(__FILE__).'/edit_form.php');
 require_once($CFG->dirroot.'/grade/grading/lib.php');
 
 $areaid = required_param('areaid', PARAM_INT);
@@ -45,19 +43,7 @@ $PAGE->set_url(new moodle_url('/grade/grading/form/erubric/edit.php', array('are
 $PAGE->set_title(get_string('defineenrichedrubric', 'gradingform_erubric'));
 $PAGE->set_heading(get_string('defineenrichedrubric', 'gradingform_erubric'));
 
-// Small adjustments to add special classes for css, to support the Greek language and other standard themes apart from Clean.
-$classsuffix = '';
-$lang = current_language();
-if ($lang == 'el') {
-    $classsuffix = ' hellenic';
-}
-$classsuffix .= ' '.$PAGE->theme->name.'_theme';
-
-$mform = new gradingform_erubric_editrubric(null, array('areaid' => $areaid,
-                                                        'context' => $context,
-                                                        'allowdraft' => !$controller->has_active_instances()),
-                                                        'post', '',
-                                                        array('class' => 'gradingform_erubric_editform'.$classsuffix));
+$mform = new gradingform_erubric_editrubric(null, array('areaid' => $areaid, 'context' => $context, 'allowdraft' => !$controller->has_active_instances()), 'post', '', array('class' => 'gradingform_erubric_editform'));
 $data = $controller->get_definition_for_editing(true);
 $returnurl = optional_param('returnurl', $manager->get_management_url(), PARAM_LOCALURL);
 $data->returnurl = $returnurl;
@@ -67,17 +53,7 @@ if ($mform->is_cancelled()) {
 } else if ($mform->is_submitted() && $mform->is_validated() && !$mform->need_confirm_regrading($controller)) {
     // Everything ok, validated, re-grading confirmed if needed. Make changes to the rubric.
     $controller->update_definition($mform->get_data());
-
-    // If we do not go back to management url and the minscore warning needs to be displayed, display it during redirection.
-    $warning = null;
-    if (!empty($data->returnurl) && $data->returnurl !== $manager->get_management_url()->out(false)) {
-        if (empty($data->rubric['options']['lockzeropoints']) && ($scores = $controller->get_min_max_score())
-            && $scores['minscore'] <> 0) {
-            $warning = get_string('zerolevelsabsent', 'gradingform_rubric').'<br>'.
-                html_writer::link($manager->get_management_url(), get_string('back'));
-        }
-    }
-    redirect($returnurl, $warning, null, \core\output\notification::NOTIFY_ERROR);
+    redirect($returnurl);
 }
 
 echo $OUTPUT->header();

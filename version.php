@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,20 +16,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Learning Analytics Enriched Rubric (e-rubric) - Version
- *
- * Contains version information about this plugin.
- *
- * @package    gradingform_erubric
- * @category   grading
- * @copyright  2012 John Dimopoulos
+ * @package    gradingform
+ * @subpackage Learinng Analytics Enriched Rubric (e-rubric)
+ * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component  = 'gradingform_erubric';
-$plugin->version    = 2018062500;
-$plugin->requires   = 2018050800;
-$plugin->release    = '3.0 (Build: 2018062500)';
-$plugin->maturity   = MATURITY_STABLE;
+$plugin->version    = 2012121600;
+$plugin->requires   = 2011120500;
+$plugin->release    = '1.0 (Build: 2012121600)';
+$plugin->maturity   = MATURITY_BETA;

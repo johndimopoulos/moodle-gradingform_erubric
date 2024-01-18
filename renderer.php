@@ -15,50 +15,45 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Learning Analytics Enriched Rubric (e-rubric) - e-Rubric Renderer
- *
- * Contains renderer functions that are used for displaying the e-rubric.
- *
- * @package    gradingform_erubric
- * @category   grading
- * @copyright  2012 John Dimopoulos
+ * @package    gradingform
+ * @subpackage Learinng Analytics Enriched Rubric (e-rubric)
+ * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-// Required files for resources and grading.
+//dimopoulos
 require_once($CFG->libdir.'/gradelib.php');
-require_once($CFG->libdir.'/resourcelib.php');
+require_once("$CFG->libdir/resourcelib.php");
+
 
 /**
  * Grading method plugin renderer
- *
- * @package    gradingform_erubric
- * @category   grading
+ * @package    gradingform
+ * @subpackage Learinng Analytics Enriched Rubric (e-rubric)
  * @copyright  2012 John Dimopoulos <johndimopoulos@sch.gr>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class gradingform_erubric_renderer extends plugin_renderer_base {
 
-    // Array to encapsulate the course resources (Book, File, URL etc.) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'.
+    //** Array to encapsulate the course resources (Book, File, URL etc.) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'. */
     protected $resources = array();
-    // Array to encapsulate the course assignments (moodle 2.2 & 2.3 compatible) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'.
+    //** Array to encapsulate the course assignments (moodle 2.2 & 2.3 compatible) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'. */
     protected $assignments = array();
-    // Array to encapsulate the course activities (of type forum or chat) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'.
+    //** Array to encapsulate the course activities (of type forum or chat) that can be used for enrichment as 'moduleid->instanceid' => 'instancename'. */
     protected $activities = array();
-    // Array to encapsulate the icons for all this course's resources, assignments and activities (defined in here), as 'moduleid' => 'htmlimagestring'.
+    //** Array to encapsulate the icons for all this course's resources, assignments and activities (defined in here), as 'moduleid'=>'htmlimagestring' .*/
     public $moduleicon = array();
-    // Boolean to show missing course modules error message.
+    //** Boolean to show missing course modules error message. *//
     protected $missingmodules = null;
 
     // Define the modules (chat-forum-old assignment-new assignment) ids that will be retrieved from modules table during _contruct.
-    // The chat module id. Make this public to use in erubriceditor.php.
-    public $chatmoduleid         = null;
-    // The forum module id.
+    public $chatmoduleid         = null; // Make this public to use in erubriceditor.php.
     protected $forummoduleid     = null;
-    // The assign module id (New type assignments).
+    protected $oldassignmoduleid = null;
     protected $newassignmoduleid = null;
+
     /**
      * Constructor
      *
@@ -79,10 +74,10 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
 
         // Find and update course modules ids.
         GLOBAL $DB;
-        $this->chatmoduleid      = $DB->get_field_sql("SELECT id FROM {modules} WHERE name='chat'", null);
-        $this->forummoduleid     = $DB->get_field_sql("SELECT id FROM {modules} WHERE name='forum'", null);
-        $this->newassignmoduleid = $DB->get_field_sql("SELECT id FROM {modules} WHERE name='assign'", null);
-        $this->labelmoduleid     = $DB->get_field_sql("SELECT id FROM {modules} WHERE name='label'", null); // Use the Label module id, to exclude it from course resources.
+        $this->chatmoduleid      = $DB->get_field_sql('SELECT id FROM {modules} WHERE name="chat"', null);
+        $this->forummoduleid     = $DB->get_field_sql('SELECT id FROM {modules} WHERE name="forum"', null);
+        $this->oldassignmoduleid = $DB->get_field_sql('SELECT id FROM {modules} WHERE name="assignment"', null);
+        $this->newassignmoduleid = $DB->get_field_sql('SELECT id FROM {modules} WHERE name="assign"', null);
 
         $this->output = $page->get_renderer('core', null, $target);
         parent::__construct($page, $target);
@@ -101,30 +96,36 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * @param string $modulename the name of the course module to use it in order to obtain the icon url and to put it in image title tag
      */
     private function check_update_modules_icon (&$moduleicons, $moduleid, $modulename) {
-        if (!array_key_exists($moduleid, $moduleicons)) {
+        if (!array_key_exists($moduleid, $moduleicons)){
             GLOBAL $OUTPUT;
-            $moduleicons[$moduleid] = $OUTPUT->pix_icon('icon', ucfirst($modulename), $modulename, array('title' => ucfirst($modulename)));
+            $moduleicons[$moduleid] =  '<img src="'.$OUTPUT->pix_url('icon', $modulename).'" title="'.ucfirst($modulename).'">';
         }
     }
 
     /**
-     * Get list of Resources, Activities and Assignments for this course and this enriched rubric.
+     * Get list of Resources, Activities and Assingments for this course and this enriched rubric.
      * As activities we take by default chat and forum modules, corresponding to students collaboration.
-     * For future adding of collaboration activities, the corresponding module ids are passed inside the
+     * For future adding of collaboration activities, the coresponding module ids are passed inside the
      * moduleactivitiesids array.
      * This function also calls the update function for the icons array of these course modules.
      *
-     * @param string $mdtype the type description of the course module
      * @param array $moduleicons the renderer's icons for modules used
-     * @return array of course_module_id -> module_instance_id
+     * @param string $mdtype the type description of the course module
      */
     private function get_modules_array($mdtype, &$moduleicons) {
 
         global $COURSE;
         global $DB;
 
+        // Check cuurent moodle version against moodle version for new assignment type (Moodle 2.3).
+        global $CFG;
+        $moodle_2_3_0_version = '2012062500';
+        $newassignmentmodule = false;
+        if ($CFG->version >= $moodle_2_3_0_version)
+            $newassignmentmodule = true;
+
         $moduleactivitiesids = array($this->chatmoduleid, $this->forummoduleid);
-        $returnarray = array();
+        $returnArray = array();
         $params = null;
 
         // Make SQL statement according to module type.
@@ -133,39 +134,50 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             case 'assignments':
                 global $PAGE;
 
-                // In case this page is accessed for activity reporting get all assignments.
-                if (!isset($PAGE->cm->modname)) {
-                    $sql = "SELECT cm.id AS uniqueID, cm.module, cm.instance, module.name, module.id, cm.course
-                               FROM {course_modules} cm
-                            INNER JOIN {modules} module ON (cm.module = module.id)
-                            WHERE cm.course = $COURSE->id
-                            AND   cm.module = $this->newassignmoduleid";
-                } else { // In case this page is accessed by this assignmet instance, get all assignments but this.
-                    $curmodule = $PAGE->cm->modname;
-                    $curmoduleid = (int)$PAGE->cm->module;
-                    $curmoduleinstance = $PAGE->cm->instance;
+                // In case this page is accessed for activity reporting do nothing.
+                if (!isset($PAGE->cm->modname)) return('');
 
+                $curmodule = $PAGE->cm->modname;
+                $curmoduleid = (int)$PAGE->cm->module;
+                $curmoduleinstance = $PAGE->cm->instance;
+
+                //**** For moodle 2.3 onwards ****//
+                if ($newassignmentmodule){
                     $sql = "SELECT cm.id AS uniqueID, cm.module, cm.instance, module.name, module.id, cm.course
                                FROM {course_modules} cm
                             INNER JOIN {modules} module ON (cm.module = module.id)
-                            WHERE cm.course = $COURSE->id
-                            AND   cm.module = $this->newassignmoduleid AND cm.instance != $curmoduleinstance";
+                            WHERE cm.course = $COURSE->id ";
+
+                    if ($curmoduleid==$this->newassignmoduleid){
+                        $sql .= "AND (cm.module = $this->oldassignmoduleid OR (cm.module = $this->newassignmoduleid AND cm.instance != $curmoduleinstance))";
+                    }else{
+                        $sql .= "AND (cm.module = $this->newassignmoduleid OR (cm.module = $this->oldassignmoduleid AND cm.instance != $curmoduleinstance))";
+                    }
+
+                //**** For moodle 2.2 versions ****//
+                }else{
+                    $sql = "SELECT cm.id AS uniqueID, cm.module, cm.instance, module.name, module.id, cm.course
+                               FROM {course_modules} cm
+                            INNER JOIN {modules} module ON (cm.module = module.id)
+                            WHERE cm.course = $COURSE->id AND cm.module = $this->oldassignmoduleid AND cm.instance != $curmoduleinstance";
                 }
                 break;
             case 'activities':
                 $sql = "SELECT cm.id AS uniqueID, cm.module, cm.instance, module.name, module.id, cm.course
                            FROM {course_modules} cm
-                        INNER JOIN {modules} module ON (cm.module = module.id)
-                        WHERE cm.course = $COURSE->id AND cm.module != $this->newassignmoduleid ";
+                        INNER JOIN {modules} module ON (cm.module = module.id) ";
 
+                if ($newassignmentmodule){
+                    $sql .= "WHERE cm.course = $COURSE->id AND cm.module != $this->oldassignmoduleid AND cm.module != $this->newassignmoduleid ";
+                }else{
+                    $sql .= "WHERE cm.course = $COURSE->id AND cm.module != $this->oldassignmoduleid ";
+                }
                 $sizeofids = count($moduleactivitiesids);
-                if ($sizeofids > 0) {
+                if ($sizeofids>0){
                     $sql .= 'AND (';
                     foreach ($moduleactivitiesids as $i => $modid) {
                         $sql .= 'cm.module = '.$moduleactivitiesids[$i];
-                        if ($i < $sizeofids - 1) {
-                            $sql .= ' OR ';
-                        }
+                        if ($i<$sizeofids-1) $sql .= ' || ';
                     }
                     $sql .= ')';
                 }
@@ -173,11 +185,15 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             case 'resources':
                 $sql = "SELECT cm.id AS uniqueID, cm.module, cm.instance, module.name, module.id, cm.course
                            FROM {course_modules} cm
-                        INNER JOIN {modules} module ON (cm.module = module.id)
-                        WHERE cm.course = $COURSE->id AND cm.module != $this->labelmoduleid AND cm.module != $this->newassignmoduleid ";
+                        INNER JOIN {modules} module ON (cm.module = module.id) ";
 
+                if ($newassignmentmodule){
+                    $sql .= "WHERE cm.course = $COURSE->id AND cm.module != $this->oldassignmoduleid AND cm.module != $this->newassignmoduleid ";
+                }else{
+                    $sql .= "WHERE cm.course = $COURSE->id AND cm.module != $this->oldassignmoduleid ";
+                }
                 $sizeofids = count($moduleactivitiesids);
-                if ($sizeofids > 0) {
+                if ($sizeofids>0){
                     foreach ($moduleactivitiesids as $i => $modid) {
                         $sql .= 'AND cm.module != '.$moduleactivitiesids[$i].' ';
                     }
@@ -187,38 +203,38 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
 
         $rs = $DB->get_records_sql($sql, $params);
 
-        if ($mdtype == 'resources' && !empty($rs)) {
+        if ($mdtype=='resources' && !empty($rs)) {
             $areresources = array(); // Put modules id for the ones that are already checked.
             foreach ($rs as $record) {
 
                 // This module instance refers to a resource module. No need to check again. Just update the return array and moduleicons array.
-                if (in_array($record->module, $areresources)) {
-                    $modinstname = $DB->get_field($record->name, 'name', array('id' => $record->instance));
-                    $returnarray[$record->module.'->'.$record->instance] = $modinstname;
+                if (in_array($record->module, $areresources)){
+                    $modInstName = $DB->get_field($record->name, 'name', array('id'=>$record->instance));
+                    $returnArray[$record->module.'->'.$record->instance] = $modInstName;
                     $this->check_update_modules_icon ($moduleicons, $record->module, $record->name); // Update icons array.
 
-                    // Check if this module instance belongs to a resource module.
-                } else {
+                // Check if this module instance belongs to a resource module.
+                }else{
                     $archetype = plugin_supports('mod', $record->name, FEATURE_MOD_ARCHETYPE, MOD_ARCHETYPE_OTHER);
                     if ($archetype == MOD_ARCHETYPE_RESOURCE) {
                         $areresources[] = $record->module; // Add new module id in the array to avoid further check of module folder.
-                        $modinstname = $DB->get_field($record->name, 'name', array('id' => $record->instance));
-                        $returnarray[$record->module.'->'.$record->instance] = $modinstname;
+                        $modInstName = $DB->get_field($record->name, 'name', array('id'=>$record->instance));
+                        $returnArray[$record->module.'->'.$record->instance] = $modInstName;
                         $this->check_update_modules_icon ($moduleicons, $record->module, $record->name); // Update icons array.
                     }
                 }
             }
-            asort($returnarray);
+            asort($returnArray);
 
-        } else if (!empty($rs)) {
+        }else if (!empty($rs)){
             foreach ($rs as $record) {
-                $modinstname = $DB->get_field($record->name, 'name', array('id' => $record->instance));
-                $returnarray[$record->module.'->'.$record->instance] = $modinstname;
+                $modInstName = $DB->get_field($record->name, 'name', array('id'=>$record->instance));
+                $returnArray[$record->module.'->'.$record->instance] = $modInstName;
                 $this->check_update_modules_icon ($moduleicons, $record->module, $record->name); // Update icons array.
             }
-            asort($returnarray);
+            asort($returnArray);
         }
-        return $returnarray;
+        return $returnArray;
     }
 
     /**
@@ -236,8 +252,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * Also JavaScript relies on the class names of elements and when developer changes them
      * script might stop working.
      *
-     * @param int $mode enriched rubric display mode, see {@link gradingform_erubric_controller}
-     * @param array $options display options for this rubric, defaults are: {@link gradingform_erubric_controller::get_default_options()}
+     * @param int $mode enriched rubric display mode @see gradingform_erubric_controller
      * @param string $elementname the name of the form element (in editor mode) or the prefix for div ids (in view mode)
      * @param array|null $criterion criterion data
      * @param string $levelsstr evaluated templates for this criterion levels
@@ -245,13 +260,9 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * @return string
      */
     public function criterion_template($mode, $options, $elementname = '{NAME}', $criterion = null, $levelsstr = '{LEVELS}', $value = null) {
-        // TODO description format, remark format.
+        // TODO description format, remark format
         if ($criterion === null || !is_array($criterion) || !array_key_exists('id', $criterion)) {
-            $criterion = array('id' => '{CRITERION-id}',
-                               'description' => '{CRITERION-description}',
-                               'sortorder' => '{CRITERION-sortorder}',
-                               'class' => '{CRITERION-class}',
-                               'criteriontype' => '{CRITERION-criteriontype}');
+            $criterion = array('id' => '{CRITERION-id}', 'description' => '{CRITERION-description}', 'sortorder' => '{CRITERION-sortorder}', 'class' => '{CRITERION-class}', 'criteriontype' => '{CRITERION-criteriontype}');
         } else {
             foreach (array('sortorder', 'description', 'class', 'criteriontype') as $key) {
                 // Set missing array elements to empty strings to avoid warnings.
@@ -263,71 +274,30 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
         $criteriontemplate = html_writer::start_tag('tr', array('class' => 'criterion'. $criterion['class'], 'id' => '{NAME}-criteria-{CRITERION-id}'));
         if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL) {
             $criteriontemplate .= html_writer::start_tag('td', array('class' => 'controls'));
-            foreach (array('moveup', 'delete', 'movedown', 'duplicate') as $key) {
+            foreach (array('moveup', 'delete', 'movedown') as $key) {
                 $value = get_string('criterion'.$key, 'gradingform_erubric');
                 $button = html_writer::empty_tag('input', array('type' => 'submit', 'name' => '{NAME}[criteria][{CRITERION-id}]['.$key.']',
                     'id' => '{NAME}-criteria-{CRITERION-id}-'.$key, 'value' => $value, 'title' => $value, 'tabindex' => -1));
                 $criteriontemplate .= html_writer::tag('div', $button, array('class' => $key));
             }
-            $criteriontemplate .= html_writer::empty_tag('input', array('type' => 'hidden',
-                                                                        'name' => '{NAME}[criteria][{CRITERION-id}][sortorder]',
-                                                                        'value' => $criterion['sortorder']));
-            $criteriontemplate .= html_writer::end_tag('td'); // The end of .controls class.
+            $criteriontemplate .= html_writer::end_tag('td'); // .controls
+            $criteriontemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][sortorder]', 'value' => $criterion['sortorder']));
+            $description = html_writer::tag('textarea', htmlspecialchars($criterion['description']), array('name' => '{NAME}[criteria][{CRITERION-id}][description]', 'cols' => '10', 'rows' => '5'));
 
-            // Criterion description text area.
-            $descriptiontextareaparams = array(
-                'name' => '{NAME}[criteria][{CRITERION-id}][description]',
-                'id' => '{NAME}-criteria-{CRITERION-id}-description',
-                'aria-label' => get_string('criterion', 'gradingform_erubric', ''),
-                'cols' => '10', 'rows' => '5'
-            );
-            $description = html_writer::tag('textarea', s($criterion['description']), $descriptiontextareaparams);
         } else {
             if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FROZEN) {
-                $criteriontemplate .= html_writer::empty_tag('input',
-                                                              array('type' => 'hidden',
-                                                                    'name' => '{NAME}[criteria][{CRITERION-id}][sortorder]',
-                                                                    'value' => $criterion['sortorder']));
-                $criteriontemplate .= html_writer::empty_tag('input',
-                                                              array('type' => 'hidden',
-                                                                    'name' => '{NAME}[criteria][{CRITERION-id}][description]',
-                                                                    'value' => $criterion['description']));
+                $criteriontemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][sortorder]', 'value' => $criterion['sortorder']));
+                $criteriontemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][description]', 'value' => $criterion['description']));
             }
-            $description = s($criterion['description']);
+            $description = $criterion['description'];
+
         }
         $descriptionclass = 'description';
         if (isset($criterion['error_description'])) {
             $descriptionclass .= ' error';
         }
-
-        // Description cell parameters.
-        $descriptiontdparams = array(
-            'class' => $descriptionclass,
-            'id' => '{NAME}-criteria-{CRITERION-id}-description-cell'
-        );
-        if ($mode != gradingform_erubric_controller::DISPLAY_EDIT_FULL &&
-            $mode != gradingform_erubric_controller::DISPLAY_EDIT_FROZEN) {
-            // Set description's cell as tab-focusable.
-            $descriptiontdparams['tabindex'] = '0';
-            // Set label for the criterion cell.
-            $descriptiontdparams['aria-label'] = get_string('criterion', 'gradingform_erubric', s($criterion['description']));
-        }
-
-        // Description cell.
-        $criteriontemplate .= html_writer::tag('td', $description, $descriptiontdparams);
-
-        // Levels table.
-        $levelsrowparams = array('id' => '{NAME}-criteria-{CRITERION-id}-levels');
-        if ($mode != gradingform_erubric_controller::DISPLAY_EDIT_FULL) {
-            $levelsrowparams['role'] = 'radiogroup';
-        }
-        $levelsrow = html_writer::tag('tr', $levelsstr, $levelsrowparams);
-
-        $levelstableparams = array(
-            'id' => '{NAME}-criteria-{CRITERION-id}-levels-table',
-            'aria-label' => get_string('levelsgroup', 'gradingform_erubric')
-        );
-        $levelsstrtable = html_writer::tag('table', $levelsrow, $levelstableparams);
+        $criteriontemplate .= html_writer::tag('td', $description, array('class' => $descriptionclass, 'id' => '{NAME}-criteria-{CRITERION-id}-description'));
+        $levelsstrtable = html_writer::tag('table', html_writer::tag('tr', $levelsstr, array('id' => '{NAME}-criteria-{CRITERION-id}-levels')));
         $levelsclass = 'levels';
         if (isset($criterion['error_levels'])) {
             $levelsclass .= ' error';
@@ -336,7 +306,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
         if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL) {
             $value = get_string('criterionaddlevel', 'gradingform_erubric');
             $button = html_writer::empty_tag('input', array('type' => 'submit', 'name' => '{NAME}[criteria][{CRITERION-id}][levels][addlevel]',
-                'id' => '{NAME}-criteria-{CRITERION-id}-levels-addlevel', 'value' => $value));
+                'id' => '{NAME}-criteria-{CRITERION-id}-levels-addlevel', 'value' => $value, 'title' => $value));
             $criteriontemplate .= html_writer::tag('td', $button, array('class' => 'addlevel'));
         }
         $displayremark = ($options['enableremarks'] && ($mode != gradingform_erubric_controller::DISPLAY_VIEW || $options['showremarksstudent']));
@@ -345,37 +315,16 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             if (isset($value['remark'])) {
                 $currentremark = $value['remark'];
             }
-
-            // Label for criterion remark.
-            $remarkinfo = new stdClass();
-            $remarkinfo->description = s($criterion['description']);
-            $remarkinfo->remark = $currentremark;
-            $remarklabeltext = get_string('criterionremark', 'gradingform_erubric', $remarkinfo);
-
             if ($mode == gradingform_erubric_controller::DISPLAY_EVAL) {
-                // HTML parameters for remarks text area.
-                $remarkparams = array(
-                    'name' => '{NAME}[criteria][{CRITERION-id}][remark]',
-                    'id' => '{NAME}-criteria-{CRITERION-id}-remark',
-                    'cols' => '10', 'rows' => '5',
-                    'aria-label' => $remarklabeltext
-                );
-                $input = html_writer::tag('textarea', s($currentremark), $remarkparams);
+                $input = html_writer::tag('textarea', htmlspecialchars($currentremark), array('name' => '{NAME}[criteria][{CRITERION-id}][remark]', 'rows' => '5'));
                 $criteriontemplate .= html_writer::tag('td', $input, array('class' => 'remark'));
             } else if ($mode == gradingform_erubric_controller::DISPLAY_EVAL_FROZEN) {
                 $criteriontemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][remark]', 'value' => $currentremark));
-            } else if ($mode == gradingform_erubric_controller::DISPLAY_REVIEW || $mode == gradingform_erubric_controller::DISPLAY_VIEW) {
-                // HTML parameters for remarks cell.
-                $remarkparams = array(
-                    'class' => 'remark',
-                    'tabindex' => '0',
-                    'id' => '{NAME}-criteria-{CRITERION-id}-remark',
-                    'aria-label' => $remarklabeltext
-                );
-                $criteriontemplate .= html_writer::tag('td', s($currentremark), $remarkparams);
+            }else if ($mode == gradingform_erubric_controller::DISPLAY_REVIEW || $mode == gradingform_erubric_controller::DISPLAY_VIEW) {
+                $criteriontemplate .= html_writer::tag('td', $currentremark, array('class' => 'remark'));
             }
         }
-        $criteriontemplate .= html_writer::end_tag('tr'); // Here ends the .criterion class.
+        $criteriontemplate .= html_writer::end_tag('tr');
 
         $criteriontemplate = str_replace('{NAME}', $elementname, $criteriontemplate);
         $criteriontemplate = str_replace('{CRITERION-id}', $criterion['id'], $criteriontemplate);
@@ -397,8 +346,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * Also JavaScript relies on the class names of elements and when developer changes them
      * script might stop working.
      *
-     * @param int $mode enriched rubric display mode, see {@link gradingform_erubric_controller}
-     * @param array $options display options for this rubric, defaults are: {@link gradingform_erubric_controller::get_default_options()}
+     * @param int $mode enriched rubric display mode @see gradingform_erubric_controller
      * @param string $elementname the name of the form element (in editor mode) or the prefix for div ids (in view mode)
      * @param array|null $criterion criterion data
      * @param string $levelsstr evaluated templates for this criterion levels
@@ -408,14 +356,10 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
     public function enriched_criterion_template($mode, $options, $elementname = '{NAME}', $criterion = null, $levelsstr = '{LEVELS}', $value = null) {
 
         // Display enriched criteria according to options.
-        if (!$options['showenrichedcriteriateacher'] &&
-            in_array($mode, array(gradingform_erubric_controller::DISPLAY_EVAL,
-                                  gradingform_erubric_controller::DISPLAY_EVAL_FROZEN,
-                                  gradingform_erubric_controller::DISPLAY_REVIEW))) {
+        if (!$options['showenrichedcriteriateacher'] && in_array($mode, array(gradingform_erubric_controller::DISPLAY_EVAL, gradingform_erubric_controller::DISPLAY_EVAL_FROZEN, gradingform_erubric_controller::DISPLAY_REVIEW))) {
             return '';
         }
-        if (!$options['showenrichedcriteriastudent'] &&
-            ($mode == gradingform_erubric_controller::DISPLAY_VIEW || $mode == gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED)) {
+        if (!$options['showenrichedcriteriastudent'] && ($mode == gradingform_erubric_controller::DISPLAY_VIEW || $mode == gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED)) {
             return '';
         }
 
@@ -440,7 +384,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
 
             foreach ($criterion['coursemodules'] as $modulename => $moduleids) { // This is one iteration step, just to get the modulename.
                 $moduletypename = $modulename;
-                // Get the already created array of modules according to the type of criterion a.k.a. $modulename.
+                // Get the already created array of modules according to the type of criterion aka. $modulename.
                 $moduleselectarray = array();
                 switch ($modulename) {
                     case 'assignment':
@@ -461,15 +405,15 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
         }
 
         // Criterion type options array.
-        $criteriontypevalues = array(gradingform_erubric_controller::INTERACTION_TYPE_COLLABORATION => get_string('selectcollaboration', 'gradingform_erubric'),
-                                       gradingform_erubric_controller::INTERACTION_TYPE_GRADE => get_string('selectgrade', 'gradingform_erubric'),
-                                       gradingform_erubric_controller::INTERACTION_TYPE_STUDY => get_string('selectstudy', 'gradingform_erubric'));
+        $criteriontypevalues = array(gradingform_erubric_controller::INTERACTION_TYPE_COLLABORATION=>get_string('selectcollaboration', 'gradingform_erubric'),
+                                       gradingform_erubric_controller::INTERACTION_TYPE_GRADE=>get_string('selectgrade', 'gradingform_erubric'),
+                                       gradingform_erubric_controller::INTERACTION_TYPE_STUDY=>get_string('selectstudy', 'gradingform_erubric'));
 
         // Collaboration type options array.
-        $collaborationtypevalues = array(gradingform_erubric_controller::COLLABORATION_TYPE_ENTRIES => get_string('collaborationtypeentries', 'gradingform_erubric'),
-                                       gradingform_erubric_controller::COLLABORATION_TYPE_FILE_ADDS => get_string('collaborationtypefileadds', 'gradingform_erubric'),
-                                       gradingform_erubric_controller::COLLABORATION_TYPE_REPLIES => get_string('collaborationtypereplies', 'gradingform_erubric'),
-                                       gradingform_erubric_controller::COLLABORATION_TYPE_INTERACTIONS => get_string('collaborationtypeinteractions', 'gradingform_erubric'));
+        $collaborationtypevalues = array(gradingform_erubric_controller::COLLABORATION_TYPE_ENTRIES=>get_string('collaborationtypeentries', 'gradingform_erubric'),
+                                       gradingform_erubric_controller::COLLABORATION_TYPE_FILE_ADDS=>get_string('collaborationtypefileadds', 'gradingform_erubric'),
+                                       gradingform_erubric_controller::COLLABORATION_TYPE_REPLIES=>get_string('collaborationtypereplies', 'gradingform_erubric'),
+                                       gradingform_erubric_controller::COLLABORATION_TYPE_INTERACTIONS=>get_string('collaborationtypeinteractions', 'gradingform_erubric'));
 
         // Operator options array.
         $operatorvalues = array( gradingform_erubric_controller::OPERATOR_EQUAL => get_string('criterionoperatorequals', 'gradingform_erubric'),
@@ -486,43 +430,40 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
         $referencetype = '';
 
         // Output fields classes in case of errors.
-        $errorclasses = array('criteriontype' => '', 'collaborationtype' => '', 'coursemodules' => '', 'operator' => '', 'referencetype' => '');
+        $errorclasses = array('criteriontype'=>'', 'collaborationtype'=>'', 'coursemodules'=>'', 'operator'=>'', 'referencetype'=>'');
 
         if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL) {
 
             // Check for errors and update $errorclasses array.
-            foreach ($errorclasses as $key => $values) {
-                if (array_key_exists('error_'.$key, $criterion)) {
+            foreach ($errorclasses as $key=>$values) {
+                if (array_key_exists('error_'.$key, $criterion)){
                     $errorclasses[$key] = ' error';
                 }
             }
 
-            // ...***Course Modules for the criterion***...
+            //*** Course Modules for the criterion ***//
             if ($criterion['coursemodules'] && is_array($criterion['coursemodules'])) {
 
-                // When showing raw form data from a not validated form...
-                // ...change the coursemodules array to be the same with the array created from the database JSON string.
-                if (!is_array($criterion['coursemodules'][$moduletypename][0])) {
-                    $criterion['coursemodules'][$moduletypename][0] = $criterion['coursemodules'][$moduletypename];
-                }
+                // When showing raw form data from a not validated form,
+                // change the coursemodules array to be the same with the array created from the database JSON string.
+                if (!is_array($criterion['coursemodules'][$moduletypename][0])) $criterion['coursemodules'][$moduletypename][0] = $criterion['coursemodules'][$moduletypename];
 
-                foreach ($criterion['coursemodules'][$moduletypename][0] as $mdlinstance) { // This loop iterates according to the number of course modules added.
+                foreach ($criterion['coursemodules'][$moduletypename][0] as $mdlinstance) { // This loop iterates according to the number of course modules added
 
-                    // Check if someone is trying to use this form as a template from another course...
-                    // ...or if any of the previously stored enriched course modules have been erased...
-                    // ...and display error message.
-                    if (!array_key_exists($mdlinstance, $moduleselectarray)) {
+                    // Check if someone is trying to use this form as a template from another course,
+                    // or if any of the previously stored enriched course modules have been erased
+                    // and display error message.
+                    if (!array_key_exists($mdlinstance, $moduleselectarray)){
                         $coursemodules .= html_writer::start_tag('li');
-                        $coursemodules .= html_writer::start_tag('span', array('class' => 'missing'));
+                        $coursemodules .= html_writer::start_tag('span', array('class'=>'missing'));
                         $coursemodules .= get_string('err_missingcoursemodule', 'gradingform_erubric');
                         $coursemodules .= html_writer::end_tag('span');
                         $coursemodules .= html_writer::end_tag('li');
 
                         // Update missing course modules error if needed.
-                        if (!$this->missingmodules) {
-                            $this->missingmodules = true;
-                        }
-                    } else { // Proceed as normal.
+                        if (!$this->missingmodules) $this->missingmodules = true;
+
+                    }else{ // Proceed as normal.
 
                         // Create the appropriate instance array.
                         $tempinstance = explode('->', $mdlinstance);
@@ -531,24 +472,18 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
 
                         $errorclass = '';
                         // Check for errors referring to collaboration criterion type.
-                        if (array_key_exists('error_collaborationmodules', $criterion) && $moduleid == $this->chatmoduleid) {
+                        if (array_key_exists('error_collaborationmodules', $criterion) && $moduleid==$this->chatmoduleid){
                             $errorclass = 'error';
                         }
 
-                        $coursemodules .= html_writer::start_tag('li',
-                                            array('id' => '{NAME}-criteria-{CRITERION-id}-'.$moduletypename.'-'.$moduleid.'-'.$instanceid,
-                                            'class' => $errorclass));
-                        $coursemodules .= html_writer::empty_tag('input',
-                                            array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][coursemodules]['.$moduletypename.'][]',
-                                            'value' => $mdlinstance));
+                        $coursemodules .= html_writer::start_tag('li', array('id' => '{NAME}-criteria-{CRITERION-id}-'.$moduletypename.'-'.$moduleid.'-'.$instanceid, 'class'=>$errorclass));
+                        $coursemodules .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][coursemodules]['.$moduletypename.'][]', 'value' => $mdlinstance));
                         $coursemodules .= $this->moduleicon[$moduleid].'&nbsp;'; // Display module icon.
-                        $coursemodules .= html_writer::tag('span', $moduleselectarray[$mdlinstance],
-                                            array('title' => $moduleselectarray[$mdlinstance], 'class' => 'nameoverflowedit'));
+                        $coursemodules .= html_writer::tag('span', $moduleselectarray[$mdlinstance], array('title'=>$moduleselectarray[$mdlinstance], 'class'=>'nameoverflowedit'));
                         $coursemodules .= html_writer::start_tag('div', array('class' => 'delete'));
                         $coursemodules .= html_writer::empty_tag('input', array('type' => 'submit', 'name' => '{NAME}[criteria][{CRITERION-id}][deletemodule]',
                                             'id' => '{NAME}-criteria-{CRITERION-id}-'.$moduletypename.'-'.$moduleid.'-'.$instanceid.'-deletemodule',
-                                            'value' => '{NAME}-criteria-{CRITERION-id}-'.$moduletypename.'-'.$moduleid.'-'.$instanceid,
-                                            'title' => $deletebuttontitle, 'tabindex' => '-1'));
+                                            'value' => '{NAME}-criteria-{CRITERION-id}-'.$moduletypename.'-'.$moduleid.'-'.$instanceid, 'title' => $deletebuttontitle, 'tabindex'=> '-1'));
                         $coursemodules .= html_writer::end_tag('div');
                         $coursemodules .= html_writer::end_tag('li');
                     }
@@ -556,130 +491,74 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             }
 
             // Enrichement select fields.
-            $criteriontype     = html_writer::select($criteriontypevalues,
-                                                    '{NAME}[criteria][{CRITERION-id}][criteriontype]',
-                                                    $criterion['criteriontype'],
-                                                    array('' => ' '),
-                                                    array('class' => 'criteriontype', 'id' => '{NAME}-criteria-{CRITERION-id}-criteriontype'));
-            $activity          = html_writer::select($this->activities,
-                                                    '{NAME}[criteria][{CRITERION-id}][activity]', '',
-                                                    array('' => get_string('addnew', 'gradingform_erubric')),
-                                                    array('class' => 'activity', 'id' => '{NAME}-criteria-{CRITERION-id}-activity'));
-            $assignment        = html_writer::select($this->assignments,
-                                                    '{NAME}[criteria][{CRITERION-id}][assignment]', '',
-                                                    array('' => get_string('addnew', 'gradingform_erubric')),
-                                                    array('class' => 'assignment', 'id' => '{NAME}-criteria-{CRITERION-id}-assignment'));
-            $resource          = html_writer::select($this->resources,
-                                                    '{NAME}[criteria][{CRITERION-id}][resource]', '',
-                                                    array('' => get_string('addnew', 'gradingform_erubric')),
-                                                    array('class' => 'resource', 'id' => '{NAME}-criteria-{CRITERION-id}-resource'));
-            $collaborationtype = html_writer::select($collaborationtypevalues,
-                                                    '{NAME}[criteria][{CRITERION-id}][collaborationtype]',
-                                                    $criterion['collaborationtype'],
-                                                    array('' => ' '),
-                                                    array('class' => 'collaborationtype', 'id' => '{NAME}-criteria-{CRITERION-id}-collaborationtype'));
-            $operator          = html_writer::select($operatorvalues,
-                                                    '{NAME}[criteria][{CRITERION-id}][operator]',
-                                                    $criterion['operator'],
-                                                    array('' => ' '),
-                                                    array('class' => 'operator', 'id' => '{NAME}-criteria-{CRITERION-id}-operator'));
-            $referencetype     = html_writer::select($referencetypevalues,
-                                                    '{NAME}[criteria][{CRITERION-id}][referencetype]',
-                                                    $criterion['referencetype'],
-                                                    array('' => ' '),
-                                                    array('class' => 'referencetype', 'id' => '{NAME}-criteria-{CRITERION-id}-referencetype'));
+            $criteriontype     = html_writer::select($criteriontypevalues, '{NAME}[criteria][{CRITERION-id}][criteriontype]', $criterion['criteriontype'], array(''=>' '), array('class'=>'criteriontype', 'id' => '{NAME}-criteria-{CRITERION-id}-criteriontype'));
+            $activity          = html_writer::select($this->activities, '{NAME}[criteria][{CRITERION-id}][activity]', '', array(''=>get_string('addnew', 'gradingform_erubric')), array('class'=>'activity', 'id' => '{NAME}-criteria-{CRITERION-id}-activity'));
+            $assignment        = html_writer::select($this->assignments, '{NAME}[criteria][{CRITERION-id}][assignment]', '', array(''=>get_string('addnew', 'gradingform_erubric')), array('class'=>'assignment', 'id' => '{NAME}-criteria-{CRITERION-id}-assignment'));
+            $resource          = html_writer::select($this->resources, '{NAME}[criteria][{CRITERION-id}][resource]', '', array(''=>get_string('addnew', 'gradingform_erubric')), array('class'=>'resource', 'id' => '{NAME}-criteria-{CRITERION-id}-resource'));
+            $collaborationtype = html_writer::select($collaborationtypevalues, '{NAME}[criteria][{CRITERION-id}][collaborationtype]', $criterion['collaborationtype'], array(''=>' '), array('class'=>'collaborationtype', 'id' => '{NAME}-criteria-{CRITERION-id}-collaborationtype'));
+            $operator          = html_writer::select($operatorvalues, '{NAME}[criteria][{CRITERION-id}][operator]', $criterion['operator'], array(''=>' '), array('class'=>'operator', 'id' => '{NAME}-criteria-{CRITERION-id}-operator'));
+            $referencetype     = html_writer::select($referencetypevalues, '{NAME}[criteria][{CRITERION-id}][referencetype]', $criterion['referencetype'], array(''=>' '), array('class'=>'referencetype', 'id' => '{NAME}-criteria-{CRITERION-id}-referencetype'));
 
         } else {
             if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FROZEN) {
-                $enrichedcriteriontemplate .= html_writer::empty_tag('input',
-                                                                array('type' => 'hidden',
-                                                                      'name' => '{NAME}[criteria][{CRITERION-id}][criteriontype]',
-                                                                      'value' => $criterion['criteriontype']));
-                $enrichedcriteriontemplate .= html_writer::empty_tag('input',
-                                                                array('type' => 'hidden',
-                                                                      'name' => '{NAME}[criteria][{CRITERION-id}][collaborationtype]',
-                                                                      'value' => $criterion['collaborationtype']));
-                $enrichedcriteriontemplate .= html_writer::empty_tag('input',
-                                                                array('type' => 'hidden',
-                                                                      'name' => '{NAME}[criteria][{CRITERION-id}][operator]',
-                                                                      'value' => $criterion['operator']));
-                $enrichedcriteriontemplate .= html_writer::empty_tag('input',
-                                                                array('type' => 'hidden',
-                                                                      'name' => '{NAME}[criteria][{CRITERION-id}][referencetype]',
-                                                                      'value' => $criterion['referencetype']));
+                $enrichedcriteriontemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][criteriontype]', 'value' => $criterion['criteriontype']));
+                $enrichedcriteriontemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][collaborationtype]', 'value' => $criterion['collaborationtype']));
+                $enrichedcriteriontemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][operator]', 'value' => $criterion['operator']));
+                $enrichedcriteriontemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][referencetype]', 'value' => $criterion['referencetype']));
             }
 
             // If there are course modules to display.
             if ($criterion['coursemodules'] && is_array($criterion['coursemodules'])) {
 
-                // If showing raw form data from a not validated form...
-                // ...change the coursemodules array to be the same with the array created from the database JSON string.
-                if (!is_array($criterion['coursemodules'][$moduletypename][0])) {
-                    $criterion['coursemodules'][$moduletypename][0] = $criterion['coursemodules'][$moduletypename];
-                }
+                // If showing raw form data from a not validated form,
+                // change the coursemodules array to be the same with the array created from the database JSON string.
+                if (!is_array($criterion['coursemodules'][$moduletypename][0])) $criterion['coursemodules'][$moduletypename][0] = $criterion['coursemodules'][$moduletypename];
 
                 foreach ($criterion['coursemodules'][$moduletypename][0] as $mdlinstance) { // This loop iterates according to the number of course modules added.
 
-                    // Check if someone is trying to use this form as a template from another course...
-                    // ...or if any of the previously stored enriched course modules has been erased...
-                    // ...and display error message unless this form is of mode DISPLAY_VIEW or DISPLAY_PREVIEW_GRADED.
-                    if (!is_array($moduleselectarray) || !array_key_exists($mdlinstance, $moduleselectarray)) {
-                        if ($mode != gradingform_erubric_controller::DISPLAY_VIEW && $mode != gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED) {
+                    // Check if someone is trying to use this form as a template from another course
+                    // or if any of the previously stored enriched course modules has been erased
+                    // and display error message unless this form is of mode DISPLAY_VIEW or DISPLAY_PREVIEW_GRADED.
+                    if (!array_key_exists($mdlinstance, $moduleselectarray)){
+                        if ($mode != gradingform_erubric_controller::DISPLAY_VIEW && $mode != gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED){
                             $coursemodules .= html_writer::start_tag('li');
-                            $coursemodules .= html_writer::start_tag('span', array('class' => 'missing'));
+                            $coursemodules .= html_writer::start_tag('span', array('class'=>'missing'));
                             $coursemodules .= get_string('err_missingcoursemodule', 'gradingform_erubric');
                             $coursemodules .= html_writer::end_tag('span');
                             $coursemodules .= html_writer::end_tag('li');
 
                             // Update missing course modules error if needed.
-                            if (!$this->missingmodules) {
-                                $this->missingmodules = true;
-                            }
+                            if (!$this->missingmodules) $this->missingmodules = true;
                         }
-                    } else { // Proceed as normal.
+                    }else{ // Proceed as normal.
                         $tempinstance = explode('->', $mdlinstance); // Create the appropriate instance array.
                         $moduleid = $tempinstance[0];
                         $instanceid = $tempinstance[1];
 
                         $coursemodules .= html_writer::start_tag('li', array('id' => '{NAME}-criteria-{CRITERION-id}-'.$moduletypename.'-'.$moduleid.'-'.$instanceid));
-                        $coursemodules .= $this->moduleicon[$moduleid].'&nbsp;'; // Display module icon.
+                        $coursemodules .= $this->moduleicon[$moduleid].'&nbsp;'; // Display module icon
 
                         if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FROZEN) {
-                            $enrichedcriteriontemplate .= html_writer::empty_tag('input',
-                                                                            array('type' => 'hidden',
-                                                                                  'name' => '{NAME}[criteria][{CRITERION-id}][coursemodules]['.$moduletypename.'][]',
-                                                                                  'value' => $mdlinstance));
+                            $enrichedcriteriontemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][coursemodules]['.$moduletypename.'][]', 'value' => $mdlinstance));
                         }
 
-                        $coursemodules .= html_writer::tag('span', $moduleselectarray[$mdlinstance],
-                                                           array('title' => $moduleselectarray[$mdlinstance], 'class' => 'nameoverflow'));
+                        $coursemodules .= html_writer::tag('span', $moduleselectarray[$mdlinstance], array('title'=>$moduleselectarray[$mdlinstance], 'class'=>'nameoverflow'));
                         $coursemodules .= html_writer::end_tag('li');
                     }
                 }
             }
 
-            if ($criterion['criteriontype']) {
-                $criteriontype = html_writer::tag('div', $criteriontypevalues[$criterion['criteriontype']], array('class' => 'plainvaluerich'));
-            }
-            if ($criterion['collaborationtype']) {
-                $collaborationtype = html_writer::tag('div', $collaborationtypevalues[$criterion['collaborationtype']], array('class' => 'plainvaluerich'));
-            }
-            if ($criterion['operator']) {
-                $operator = html_writer::tag('div', $operatorvalues[$criterion['operator']], array('class' => 'plainvaluerich'));
-            }
-            if ($criterion['referencetype']) {
-                $referencetype = html_writer::tag('div', $referencetypevalues[$criterion['referencetype']], array('class' => 'plainvaluerich'));
-            }
+            if ($criterion['criteriontype']) $criteriontype = html_writer::tag('div', $criteriontypevalues[$criterion['criteriontype']], array('class'=>'plainvaluerich'));
+            if ($criterion['collaborationtype']) $collaborationtype = html_writer::tag('div', $collaborationtypevalues[$criterion['collaborationtype']], array('class'=>'plainvaluerich'));
+            if ($criterion['operator']) $operator = html_writer::tag('div', $operatorvalues[$criterion['operator']], array('class'=>'plainvaluerich'));
+            if ($criterion['referencetype']) $referencetype = html_writer::tag('div', $referencetypevalues[$criterion['referencetype']], array('class'=>'plainvaluerich'));
         }
 
         // Handle tr's first 2 columns.
         if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL) {
-            $enrichedcriteriontemplate .= html_writer::start_tag('td', array('colspan' => '2',
-                                                                             'class' => 'enrichedcriteria',
-                                                                             'id' => '{NAME}-criteria-{CRITERION-id}-enriched_interaction'));
-        } else {
-            $enrichedcriteriontemplate .= html_writer::start_tag('td', array('class' => 'enrichedcriteria',
-                                                                             'id' => '{NAME}-criteria-{CRITERION-id}-enriched_interaction'));
+            $enrichedcriteriontemplate .= html_writer::start_tag('td', array('colspan' => '2', 'class' => 'enrichedcriteria', 'id' => '{NAME}-criteria-{CRITERION-id}-enriched_interaction'));
+        }else{
+            $enrichedcriteriontemplate .= html_writer::start_tag('td', array('class' => 'enrichedcriteria', 'id' => '{NAME}-criteria-{CRITERION-id}-enriched_interaction'));
         }
         $enrichedcriteriontemplate .= html_writer::start_tag('div', array('class' => 'enriched-wrapper'));
         $enrichedcriteriontemplate .= html_writer::start_tag('div', array('class' => 'rich'.$errorclasses['criteriontype']));
@@ -709,7 +588,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             $enrichedcriteriontemplate .= $assignment;
         }
 
-        $enrichedcriteriontemplate .= html_writer::end_tag('div'); // End of module container with contents and select fields.
+        $enrichedcriteriontemplate .= html_writer::end_tag('div'); // End of module container with contents and select fields
         $enrichedcriteriontemplate .= html_writer::end_tag('div');
         $enrichedcriteriontemplate .= html_writer::start_tag('div', array('class' => 'rich'.$errorclasses['operator']));
         $enrichedcriteriontemplate .= get_string('participationis', 'gradingform_erubric');
@@ -738,7 +617,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             $component = 'gradingform_erubric';
             $linktext = '';
             $helpicon = $OUTPUT->help_icon($identifier, $component, $linktext);
-            $enrichedcriteriontemplate .= html_writer::tag('td', $helpicon, array('class' => 'helptooltip'));
+            $enrichedcriteriontemplate .= html_writer::tag('td', $helpicon, array('class' => 'addlevel'));
         }
 
         // Check if the benchmark from evaluation should be displayed or leave an empty td.
@@ -750,113 +629,62 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
         if ($displaybenchmark) { // Display benchmark.
 
             // Get the benchmarks (if they exists) from values array, to display them to student.
-            if (!array_key_exists('enrichedbenchmark', $criterion) && isset($value['enrichedbenchmark'])) {
+            if (!array_key_exists('enrichedbenchmark', $criterion) && isset($value['enrichedbenchmark']))
                 $criterion['enrichedbenchmark'] = $value['enrichedbenchmark'];
-            }
-            if (!array_key_exists('enrichedbenchmarkstudent', $criterion) && isset($value['enrichedbenchmarkstudent'])) {
+            if (!array_key_exists('enrichedbenchmarkstudent', $criterion) && isset($value['enrichedbenchmarkstudent']))
                 $criterion['enrichedbenchmarkstudent'] = $value['enrichedbenchmarkstudent'];
-            }
-            if (!array_key_exists('enrichedbenchmarkstudents', $criterion) && isset($value['enrichedbenchmarkstudents'])) {
+            if (!array_key_exists('enrichedbenchmarkstudents', $criterion) && isset($value['enrichedbenchmarkstudents']))
                 $criterion['enrichedbenchmarkstudents'] = $value['enrichedbenchmarkstudents'];
-            }
 
             $benchmarkstr = '';
 
             // If there are benchmarks in the criterion data (even null).
-            if (array_key_exists('enrichedbenchmark', $criterion) || array_key_exists('enrichedbenchmarkstudents', $criterion)) {
+            if (array_key_exists('enrichedbenchmark', $criterion) || array_key_exists('enrichedbenchmarkstudents', $criterion)){
 
-                // In case of evaluation, put value in hidden field to update enriched rubric fillings.
-                if (($mode == gradingform_erubric_controller::DISPLAY_EVAL || $mode == gradingform_erubric_controller::DISPLAY_EVAL_FROZEN)) {
+                //** In case of evalluation, put value in hidden field to update enriched rubric fillings. **//
+                if (($mode == gradingform_erubric_controller::DISPLAY_EVAL || $mode == gradingform_erubric_controller::DISPLAY_EVAL_FROZEN)){
                     // Criterion benchmark.
-                    if (strlen((String)$criterion['enrichedbenchmark']) > 0) {
-                        $benchmarkstr .= html_writer::empty_tag('input',
-                                            array('type' => 'hidden',
-                                                  'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmark]',
-                                                  'value' => $criterion['enrichedbenchmark']));
-                    } else {
-                        $benchmarkstr .= html_writer::empty_tag('input',
-                                            array('type' => 'hidden',
-                                                  'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmark]',
-                                                  'value' => ''));
+                    if (strlen((String)$criterion['enrichedbenchmark'])>0){
+                        $benchmarkstr .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmark]', 'value' => $criterion['enrichedbenchmark']));
+                    }else{
+                        $benchmarkstr .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmark]', 'value' => ''));
                     }
                     // Student benchmark.
-                    if (strlen((String)$criterion['enrichedbenchmarkstudent']) > 0) {
-                        $benchmarkstr .= html_writer::empty_tag('input',
-                                            array('type' => 'hidden',
-                                                  'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmarkstudent]',
-                                                  'value' => $criterion['enrichedbenchmarkstudent']));
-                    } else {
-                        $benchmarkstr .= html_writer::empty_tag('input',
-                                            array('type' => 'hidden',
-                                                  'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmarkstudent]',
-                                                  'value' => ''));
+                    if (strlen((String)$criterion['enrichedbenchmarkstudent'])>0){
+                        $benchmarkstr .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmarkstudent]', 'value' => $criterion['enrichedbenchmarkstudent']));
+                    }else{
+                        $benchmarkstr .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmarkstudent]', 'value' => ''));
                     }
                     // Students benchmark.
-                    if (strlen((String)$criterion['enrichedbenchmarkstudents']) > 0) {
-                        $benchmarkstr .= html_writer::empty_tag('input',
-                                            array('type' => 'hidden',
-                                                  'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmarkstudents]',
-                                                  'value' => $criterion['enrichedbenchmarkstudents']));
-                    } else {
-                        $benchmarkstr .= html_writer::empty_tag('input',
-                                            array('type' => 'hidden',
-                                                  'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmarkstudents]',
-                                                  'value' => ''));
+                    if (strlen((String)$criterion['enrichedbenchmarkstudents'])>0) {
+                        $benchmarkstr .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmarkstudents]', 'value' => $criterion['enrichedbenchmarkstudents']));
+                    }else{
+                        $benchmarkstr .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][enrichedbenchmarkstudents]', 'value' => ''));
                     }
                 }
 
-                // If there was a reference according to students evaluation, show student and students averages.
-                if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS
-                    && array_key_exists('enrichedbenchmarkstudents', $criterion)
-                    && !is_null($criterion['enrichedbenchmarkstudents'])) {
-
-                    $benchmarkstr .= html_writer::tag('div', '',
-                                        array('class' => 'studentico', 'title' => get_string('studentbenchmarkinfo', 'gradingform_erubric')));
-                    $benchmarkstr .= html_writer::tag('div', '', array('class' => 'rightarrow'));
-                    $benchmarkstr .= html_writer::tag('div', $criterion['enrichedbenchmarkstudent'],
-                                        array('class' => 'valuecontainer', 'title' => get_string('studentbenchmarkinfo', 'gradingform_erubric')));
-                    $benchmarkstr .= html_writer::tag('div', '', array('class' => 'ranges'));
-                    $benchmarkstr .= html_writer::empty_tag('hr');
-                    $benchmarkstr .= html_writer::tag('div', '',
-                                        array('class' => 'studentsico', 'title' => get_string('studentsbenchmarkinfo', 'gradingform_erubric')));
-                    $benchmarkstr .= html_writer::tag('div', '', array('class' => 'rightarrow'));
-                    $benchmarkstr .= html_writer::tag('div', $criterion['enrichedbenchmarkstudents'],
-                                        array('class' => 'valuecontainer', 'title' => get_string('studentsbenchmarkinfo', 'gradingform_erubric')));
-                    $benchmarkstr .= html_writer::tag('div', '', array('class' => 'ranges'));
-                    $benchmarkstr .= html_writer::tag('div', '', array('class' => 'downarrow'));
-                    $benchmarkstr .= html_writer::tag('div', '',
-                                        array('class' => 'calculator', 'title' => get_string('benchmarkfinal', 'gradingform_erubric')));
-                    $benchmarkstr .= html_writer::tag('div', '', array('class' => 'rightarrow'));
-                    $benchmarkstr .= html_writer::tag('div', $criterion['enrichedbenchmark'].'%',
-                                        array('class' => 'valuecontainer', 'title' => get_string('benchmarkfinal', 'gradingform_erubric')));
-                    $benchmarkstr .= html_writer::tag('div', '',
-                                        array('class' => 'outcome', 'title' => get_string('benchmarkfinal', 'gradingform_erubric')));
-
-                    // If the student benchmark is valid, display it.
+                // If there was a reference according to students avaluation, show student and students avereges.
+                if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS && array_key_exists('enrichedbenchmarkstudents', $criterion) && !is_null($criterion['enrichedbenchmarkstudents'])) {
+                    $temparr = array('student'=> $criterion['enrichedbenchmarkstudent'], 'students'=>$criterion['enrichedbenchmarkstudents']);
+                    $temparr = (object)$temparr;
+                    $benchmarkstr .= get_string('benchmarkinfoall', 'gradingform_erubric', $temparr);
+                // If the student benchmark is valid, display it.
                 } else if (array_key_exists('enrichedbenchmark', $criterion) && !is_null($criterion['enrichedbenchmark'])) {
-                    $benchmarkstr .= html_writer::tag('div', '',
-                                        array('class' => 'studentico', 'title' => get_string('studentbenchmarkinfo', 'gradingform_erubric')));
-                    $benchmarkstr .= html_writer::tag('div', '', array('class' => 'rightarrow'));
-                    $benchmarkstr .= html_writer::tag('div', $criterion['enrichedbenchmark'],
-                                        array('class' => 'valuecontainer', 'title' => get_string('studentbenchmarkinfo', 'gradingform_erubric')));
-                    $benchmarkstr .= html_writer::tag('div', '', array('class' => 'ranges'));
-                    // Student or students benchmarks have no valid value.
-                } else {
-                    $benchmarkstr .= html_writer::tag('div', '',
-                                        array('class' => 'valuenull', 'title' => get_string('benchmarkinfonull', 'gradingform_erubric')));
+                    $benchmarkstr .= get_string('benchmarkinfo', 'gradingform_erubric', $criterion['enrichedbenchmark']);
+                // Student or sudents benchmarks have no valid value.
+                }else{
+                    $benchmarkstr .= get_string('benchmarkinfonull', 'gradingform_erubric');
                 }
 
-                // If there are no benchmarks in the criterion and this form is displayed to a student.
-            } else if ($mode == gradingform_erubric_controller::DISPLAY_VIEW) {
-                $benchmarkstr .= html_writer::tag('div', '',
-                                        array('class' => 'valuenull', 'title' => get_string('benchmarkinfonull', 'gradingform_erubric')));
+            // If there are no benchmarks in the criterion and this form is displayed to a student.
+            }else if ($mode == gradingform_erubric_controller::DISPLAY_VIEW) {
+                $benchmarkstr .= get_string('benchmarkinfonull', 'gradingform_erubric');
             }
-            $enrichedcriteriontemplate .= html_writer::tag('td', $benchmarkstr,
-                                        array('class' => 'results', 'title' => get_string('benchmarkinfo', 'gradingform_erubric')));
+            $enrichedcriteriontemplate .= html_writer::tag('td', $benchmarkstr, array('class' => 'addlevel'));
         }
 
         if ($displayremark && !$displaybenchmark) { // Display empty td.
-            $enrichedcriteriontemplate .= html_writer::tag('td', '', array('class' => 'results'));
+            $enrichedcriteriontemplate .= html_writer::tag('td', '', array('class' => 'addlevel'));
         }
 
         $enrichedcriteriontemplate .= html_writer::end_tag('tr'); // Close the enriched criterion table row.
@@ -880,8 +708,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * Also JavaScript relies on the class names of elements and when developer changes them
      * script might stop working.
      *
-     * @param int $mode rubric display mode as defined in gradingform_erubric_controller
-     * @param array $options display options for this rubric, defaults are: {@link gradingform_erubric_controller::get_default_options()}
+     * @param int $mode rubric display mode @see gradingform_erubric_controller
      * @param string $elementname the name of the form element (in editor mode) or the prefix for div ids (in view mode)
      * @param string|int $criterionid either id of the nesting criterion or a macro for template
      * @param array|null $level level data, also in view mode it might also have property $level['checked'] whether this level is checked
@@ -890,10 +717,9 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
     public function level_template($mode, $options, $elementname = '{NAME}', $criterionid = '{CRITERION-id}', $level = null) {
 
         if (!isset($level['id'])) {
-            $level = array('id' => '{LEVEL-id}', 'definition' => '{LEVEL-definition}',
-                           'score' => '{LEVEL-score}', 'class' => '{LEVEL-class}', 'checked' => false, 'enrichedvalue' => '{LEVEL-enrichedvalue}');
+            $level = array('id' => '{LEVEL-id}', 'definition' => '{LEVEL-definition}', 'score' => '{LEVEL-score}', 'class' => '{LEVEL-class}', 'checked' => false, 'enrichedvalue' => '{LEVEL-enrichedvalue}');
         } else {
-            foreach (array('score', 'definition', 'class', 'checked', 'index', 'enrichedvalue') as $key) {
+            foreach (array('score', 'definition', 'class', 'checked', 'enrichedvalue') as $key) {
                 // Set missing array elements to empty strings to avoid warnings.
                 if (!array_key_exists($key, $level)) {
                     $level[$key] = '';
@@ -901,113 +727,45 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             }
         }
 
-        // Get level index.
-        $levelindex = isset($level['index']) ? $level['index'] : '{LEVEL-index}';
-
         // Template for one level within one criterion.
-        $tdattributes = array(
-            'id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}',
-            'class' => 'level' . $level['class']
-        );
+        $tdattributes = array('id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}', 'class' => 'level'. $level['class']);
         if (isset($level['tdwidth'])) {
             $tdattributes['width'] = round($level['tdwidth']).'%';
         }
-
-        $leveltemplate = html_writer::start_tag('div', array('class' => 'level-wrapper'));
+        $leveltemplate = html_writer::start_tag('td', $tdattributes);
+        $leveltemplate .= html_writer::start_tag('div', array('class' => 'level-wrapper'));
         if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL) {
-            $definitionparams = array(
-                'id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}-definition',
-                'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][definition]',
-                'aria-label' => get_string('leveldefinition', 'gradingform_erubric', $levelindex),
-                'cols' => '10', 'rows' => '4'
-            );
-            $definition = html_writer::tag('textarea', s($level['definition']), $definitionparams);
-
-            $scoreparams = array(
-                'type' => 'text',
-                'id' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][score]',
-                'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][score]',
-                'aria-label' => get_string('scoreinputforlevel', 'gradingform_erubric', $levelindex),
-                'size' => '3',
-                'value' => $level['score']
-            );
-            $score = html_writer::empty_tag('input', $scoreparams);
+            $definition = html_writer::tag('textarea', htmlspecialchars($level['definition']), array('name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][definition]', 'cols' => '10', 'rows' => '4'));
+            $score = html_writer::empty_tag('input', array('type' => 'text', 'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][score]', 'size' => '3', 'value' => $level['score']));
         } else {
             if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FROZEN) {
-                $leveltemplate .= html_writer::empty_tag('input',
-                                    array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][definition]',
-                                          'value' => $level['definition']));
-                $leveltemplate .= html_writer::empty_tag('input',
-                                    array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][score]',
-                                          'value' => $level['score']));
+                $leveltemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][definition]', 'value' => $level['definition']));
+                $leveltemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][score]', 'value' => $level['score']));
             }
-            $definition = s($level['definition']);
+            $definition = $level['definition'];
             $score = $level['score'];
+
         }
         if ($mode == gradingform_erubric_controller::DISPLAY_EVAL) {
-            $levelradioparams = array(
-                'type' => 'radio',
-                'id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}-definition',
-                'name' => '{NAME}[criteria][{CRITERION-id}][levelid]',
-                'value' => $level['id']
-            );
-            if ($level['checked']) {
-                $levelradioparams['checked'] = 'checked';
-            }
-            $input = html_writer::empty_tag('input', $levelradioparams);
-            $leveltemplate .= html_writer::div($input, 'radio');
+            $input = html_writer::empty_tag('input', array('type' => 'radio', 'name' => '{NAME}[criteria][{CRITERION-id}][levelid]', 'value' => $level['id']) +
+                    ($level['checked'] ? array('checked' => 'checked') : array()));
+            $leveltemplate .= html_writer::tag('div', $input, array('class' => 'radio'));
         }
         if ($mode == gradingform_erubric_controller::DISPLAY_EVAL_FROZEN && $level['checked']) {
-            $leveltemplate .= html_writer::empty_tag('input',
-                array(
-                    'type' => 'hidden',
-                    'name' => '{NAME}[criteria][{CRITERION-id}][levelid]',
-                    'value' => $level['id']
-                )
-            );
+            $leveltemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][levelid]', 'value' => $level['id']));
         }
-        $score = html_writer::tag('span', $score,
-                    array('id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}-score', 'class' => 'scorevalue'));
+        $score = html_writer::tag('span', $score, array('id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}-score', 'class' => 'scorevalue'));
+
         $definitionclass = 'definition';
         if (isset($level['error_definition'])) {
             $definitionclass .= ' error';
         }
-
-        if ($mode != gradingform_erubric_controller::DISPLAY_EDIT_FULL &&
-            $mode != gradingform_erubric_controller::DISPLAY_EDIT_FROZEN) {
-
-            $tdattributes['tabindex'] = '0';
-            $levelinfo = new stdClass();
-            $levelinfo->definition = s($level['definition']);
-            $levelinfo->score = $level['score'];
-            $tdattributes['aria-label'] = get_string('level', 'gradingform_rubric', $levelinfo);
-
-            if ($mode != gradingform_erubric_controller::DISPLAY_PREVIEW &&
-                $mode != gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED) {
-                // Add role of radio button to level cell if not in edit and preview mode.
-                $tdattributes['role'] = 'radio';
-                if ($level['checked']) {
-                    $tdattributes['aria-checked'] = 'true';
-                } else {
-                    $tdattributes['aria-checked'] = 'false';
-                }
-            }
-        }
-
-        $leveltemplateparams = array(
-            'id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}-definition-container'
-        );
-        $leveltemplate .= html_writer::div($definition, $definitionclass, $leveltemplateparams);
+        $leveltemplate .= html_writer::tag('div', $definition, array('class' => $definitionclass, 'id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}-definition'));
         $displayscore = true;
-        if (!$options['showscoreteacher'] && in_array($mode,
-                                                        array(gradingform_erubric_controller::DISPLAY_EVAL,
-                                                              gradingform_erubric_controller::DISPLAY_EVAL_FROZEN,
-                                                              gradingform_erubric_controller::DISPLAY_REVIEW))) {
+        if (!$options['showscoreteacher'] && in_array($mode, array(gradingform_erubric_controller::DISPLAY_EVAL, gradingform_erubric_controller::DISPLAY_EVAL_FROZEN, gradingform_erubric_controller::DISPLAY_REVIEW))) {
             $displayscore = false;
         }
-        if (!$options['showscorestudent'] && in_array($mode,
-                                                        array(gradingform_erubric_controller::DISPLAY_VIEW,
-                                                              gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED))) {
+        if (!$options['showscorestudent'] && in_array($mode, array(gradingform_erubric_controller::DISPLAY_VIEW, gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED))) {
             $displayscore = false;
         }
         if ($displayscore) {
@@ -1015,22 +773,17 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             if (isset($level['error_score'])) {
                 $scoreclass .= ' error';
             }
+
             $leveltemplate .= html_writer::tag('div', get_string('scorepostfix', 'gradingform_erubric', $score), array('class' => $scoreclass));
+
         }
         if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL) {
-            $value = get_string('leveldelete', 'gradingform_rubric', $levelindex);
-            $buttonparams = array(
-                'type' => 'submit',
-                'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][delete]',
-                'id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}-delete',
-                'value' => $value, 'title' => $value
-            );
-            $button = html_writer::empty_tag('input', $buttonparams);
+            $value = get_string('leveldelete', 'gradingform_erubric');
+            $button = html_writer::empty_tag('input', array('type' => 'submit', 'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][delete]', 'id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}-delete', 'value' => $value, 'title' => $value, 'tabindex' => -1));
             $leveltemplate .= html_writer::tag('div', $button, array('class' => 'delete'));
         }
-        $leveltemplate .= html_writer::end_tag('div'); // This contains the .level-wrapper class.
-
-        $leveltemplate = html_writer::tag('td', $leveltemplate, $tdattributes); // The .level cell.
+        $leveltemplate .= html_writer::end_tag('div'); // .level-wrapper
+        $leveltemplate .= html_writer::end_tag('td'); // .level
 
         $leveltemplate = str_replace('{NAME}', $elementname, $leveltemplate);
         $leveltemplate = str_replace('{CRITERION-id}', $criterionid, $leveltemplate);
@@ -1053,8 +806,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * Also JavaScript relies on the class names of elements and when developer changes them
      * script might stop working.
      *
-     * @param int $mode rubric display mode as defined in gradingform_erubric_controller
-     * @param array $options display options for this rubric, defaults are: {@link gradingform_erubric_controller::get_default_options()}
+     * @param int $mode rubric display mode @see gradingform_erubric_controller
      * @param string $elementname the name of the form element (in editor mode) or the prefix for div ids (in view mode)
      * @param string|int $criterionid either id of the nesting criterion or a macro for template
      * @param array|null $level level data, also in view mode it might also have property $level['checked'] whether this level is checked
@@ -1063,13 +815,9 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
     public function enriched_level_template($mode, $options, $elementname = '{NAME}', $criterionid = '{CRITERION-id}', $level = null) {
 
         if (!isset($level['id'])) {
-            $level = array('id' => '{LEVEL-id}',
-                           'enrichedvalue' => '{LEVEL-enrichedvalue}',
-                           'enrichedvaluesuffix' => '',
-                           'class' => '{LEVEL-class}',
-                           'checked' => false);
+            $level = array('id' => '{LEVEL-id}', 'class' => '{LEVEL-class}', 'checked' => false, 'enrichedvalue' => '{LEVEL-enrichedvalue}', 'enrichedvaluesuffix'=>'');
         } else {
-            foreach (array('enrichedvalue', 'enrichedvaluesuffix', 'class', 'checked', 'index') as $key) {
+            foreach (array('class', 'checked', 'enrichedvalue', 'enrichedvaluesuffix') as $key) {
                 // Set missing array elements to empty strings to avoid warnings.
                 if (!array_key_exists($key, $level)) {
                     $level[$key] = '';
@@ -1077,77 +825,52 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             }
         }
 
-        // Get level index.
-        $levelindex = isset($level['index']) ? $level['index'] : '{LEVEL-index}';
-
         // Template for one level within one criterion.
-        $tdattributes = array(
-            'id' => '{NAME}-enriched-criteria-{CRITERION-id}-levels-{LEVEL-id}',
-            'class' => 'enrichedlevel' . $level['class']
-        );
+        $tdattributes = array('id' => '{NAME}-enriched-criteria-{CRITERION-id}-levels-{LEVEL-id}', 'class' => 'enrichedlevel'. $level['class']);
         if (isset($level['tdwidth'])) {
             $tdattributes['width'] = round($level['tdwidth']).'%';
         }
+        $enrichedleveltemplate = html_writer::start_tag('td', $tdattributes);
 
         // Check the options about showing the levels' enriched value.
         $displayvalue = true;
         $enrichedvalueclass = 'richvalue';
-        if (!$options['showenrichedvalueteacher'] && in_array($mode,
-                                                        array(gradingform_erubric_controller::DISPLAY_EVAL,
-                                                              gradingform_erubric_controller::DISPLAY_EVAL_FROZEN,
-                                                              gradingform_erubric_controller::DISPLAY_REVIEW))) {
+        if (!$options['showenrichedvalueteacher'] && in_array($mode, array(gradingform_erubric_controller::DISPLAY_EVAL, gradingform_erubric_controller::DISPLAY_EVAL_FROZEN, gradingform_erubric_controller::DISPLAY_REVIEW))) {
             $displayvalue = false;
         }
-        if (!$options['showenrichedvaluestudent'] &&
-            ($mode == gradingform_erubric_controller::DISPLAY_VIEW ||
-             $mode == gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED)) {
+        if (!$options['showenrichedvaluestudent'] && ($mode == gradingform_erubric_controller::DISPLAY_VIEW || $mode == gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED)) {
             $displayvalue = false;
         }
-        if ($displayvalue && (isset($level['error_enrichedvalue']))) {
-            $enrichedvalueclass .= ' error';
+        if ($displayvalue && (isset($level['error_enrichedvalueformat']) || isset($level['error_enrichedvaluemissing']))) {
+                $enrichedvalueclass .= ' error';
         }
-        if ($mode == gradingform_erubric_controller::DISPLAY_EVAL && $level['checked']) {
-            $enrichedvalueclass .= ' checked';
+        if ($mode == gradingform_erubric_controller::DISPLAY_EVAL) {
+            if ($level['checked']) $enrichedvalueclass .= ' checked';
         }
-
-        // Template for one level within one criterion.
-        $enrichedleveltemplate = html_writer::start_tag('div', array('class' => $enrichedvalueclass));
+        $enrichedleveltemplate .= html_writer::start_tag('div', array('class' => $enrichedvalueclass));
         if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL) {
-            $enrichedvalue = html_writer::empty_tag('input',
-                                              array('type' => 'text',
-                                                    'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][enrichedvalue]',
-                                                    'size' => '3',
-                                                    'value' => $level['enrichedvalue']));
+            $enrichedvalue = html_writer::empty_tag('input', array('type' => 'text', 'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][enrichedvalue]', 'size' => '3', 'value' => $level['enrichedvalue']));
         } else {
             if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FROZEN) {
-                $enrichedleveltemplate .= html_writer::empty_tag('input',
-                                                           array('type' => 'hidden',
-                                                                 'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][enrichedvalue]',
-                                                                 'value' => $level['enrichedvalue']));
+                $enrichedleveltemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][enrichedvalue]', 'value' => $level['enrichedvalue']));
             }
 
             $enrichedvalue = $level['enrichedvalue'];
         }
 
         if ($mode == gradingform_erubric_controller::DISPLAY_EVAL_FROZEN && $level['checked']) {
-            $enrichedleveltemplate .= html_writer::empty_tag('input',
-                                                        array('type' => 'hidden',
-                                                              'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][enrichedvalue]',
-                                                              'value' => $level['enrichedvalue']));
+            $enrichedleveltemplate .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => '{NAME}[criteria][{CRITERION-id}][levels][{LEVEL-id}][enrichedvalue]', 'value' => $level['enrichedvalue']));
         }
 
-        $enrichedvalue = html_writer::tag('span', $enrichedvalue,
-                                    array('id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}-enrichedvalue',
-                                    'class' => 'enrichedvalue'));
-        $enrichedvalue .= html_writer::tag('i', $level['enrichedvaluesuffix'],
-                                    array('id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}-enrichedvaluesuffix'));
+        $enrichedvalue = html_writer::tag('span', $enrichedvalue, array('id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}-enrichedvalue', 'class' => 'enrichedvalue'));
+        $enrichedvalue .= html_writer::tag('i', $level['enrichedvaluesuffix'], array('id' => '{NAME}-criteria-{CRITERION-id}-levels-{LEVEL-id}-enrichedvaluesuffix'));
 
         if ($displayvalue) {
             $enrichedleveltemplate .= $enrichedvalue;
         }
 
-        $enrichedleveltemplate .= html_writer::end_tag('div'); // The cell containing the .richvalue class.
-        $enrichedleveltemplate = html_writer::tag('td', $enrichedleveltemplate, $tdattributes); // The .level cell.
+        $enrichedleveltemplate .= html_writer::end_tag('div'); // .richvalue
+        $enrichedleveltemplate .= html_writer::end_tag('td'); // .level
 
         $enrichedleveltemplate = str_replace('{NAME}', $elementname, $enrichedleveltemplate);
         $enrichedleveltemplate = str_replace('{CRITERION-id}', $criterionid, $enrichedleveltemplate);
@@ -1168,80 +891,51 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * Also JavaScript relies on the class names of elements and when developer changes them
      * script might stop working.
      *
-     * @param int $mode rubric display mode as defined in gradingform_erubric_controller
-     * @param array $options display options for this rubric, defaults are: {@link gradingform_erubric_controller::get_default_options()}
+     * @param int $mode rubric display mode @see gradingform_erubric_controller
      * @param string $elementname the name of the form element (in editor mode) or the prefix for div ids (in view mode)
      * @param string $criteriastr evaluated templates for this rubric's criteria
-     * @param int $maxcriterialevels the maximum number of levels this rubric has
      * @return string
      */
-    protected function erubric_template($mode, $options, $elementname, $criteriastr, $maxcriterialevels) {
-
-        // CSS suffix for class of the main div. Depends on the mode, theme and language (for Greek).
-        $lang = current_language();
-        $classsuffix = ($lang == 'el') ? ' hellenic' : '';
-        Global $PAGE;
-
+    protected function erubric_template($mode, $options, $elementname, $criteriastr) {
+        $classsuffix = ''; // CSS suffix for class of the main div. Depends on the mode.
         switch ($mode) {
             case gradingform_erubric_controller::DISPLAY_EDIT_FULL:
-                $classsuffix .= ' editor editable';
-                break;
+                $classsuffix = ' editor editable'; break;
             case gradingform_erubric_controller::DISPLAY_EDIT_FROZEN:
-                $classsuffix .= ' editor frozen';
-                break;
+                $classsuffix = ' editor frozen';  break;
             case gradingform_erubric_controller::DISPLAY_PREVIEW:
             case gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED:
-                $classsuffix .= ' '.$PAGE->theme->name.'_theme editor preview';
-                break;
+                $classsuffix = ' editor preview';  break;
             case gradingform_erubric_controller::DISPLAY_EVAL:
-                $classsuffix .= ' '.$PAGE->theme->name.'_theme evaluate editable';
-                break;
+                $classsuffix = ' evaluate editable'; break;
             case gradingform_erubric_controller::DISPLAY_EVAL_FROZEN:
-                $classsuffix .= ' '.$PAGE->theme->name.'_theme evaluate frozen';
-                break;
+                $classsuffix = ' evaluate frozen';  break;
             case gradingform_erubric_controller::DISPLAY_REVIEW:
-                $classsuffix .= ' review';
-                break;
+                $classsuffix = ' review';  break;
             case gradingform_erubric_controller::DISPLAY_VIEW:
-                $classsuffix .= ' '.$PAGE->theme->name.'_theme view';
-                break;
+                $classsuffix = ' view';  break;
         }
 
         $enrichedrubrictemplate = '';
 
         // Display error message in case of missing course modules.
-        if ($this->missingmodules && $mode != gradingform_erubric_controller::DISPLAY_VIEW &&
-                $mode != gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED) {
-            if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL || $mode == gradingform_erubric_controller::DISPLAY_EDIT_FROZEN) {
+        if ($this->missingmodules && $mode != gradingform_erubric_controller::DISPLAY_VIEW && $mode != gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED){
+            if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL || $mode == gradingform_erubric_controller::DISPLAY_EDIT_FROZEN){
                 $enrichedrubrictemplate .= $this->box(
                     html_writer::tag('div', get_string('err_missingcoursemodulesedit', 'gradingform_erubric'), array('class' => 'missingmodule'))
                     , 'generalbox');
-            } else {
+            }else{
                 $enrichedrubrictemplate .= $this->box(
                     html_writer::tag('div', get_string('err_missingcoursemodules', 'gradingform_erubric'), array('class' => 'missingmodule'))
                     , 'generalbox');
             }
         }
 
-        $enrichedrubrictemplate .= html_writer::start_tag('div',
-                                    array('id' => 'erubric-{NAME}',
-                                          'class' => 'clearfix gradingform_erubric'.$classsuffix,
-                                          'data-maxlevels' => $maxcriterialevels));
-        // Rubric table.
-        $rubrictableparams = array(
-            'class' => 'criteria',
-            'id' => '{NAME}-criteria',
-            'aria-label' => get_string('rubric', 'gradingform_rubric'));
-        $enrichedrubrictemplate .= html_writer::tag('table', $criteriastr, $rubrictableparams);
-
+        $enrichedrubrictemplate .= html_writer::start_tag('div', array('id' => 'erubric-{NAME}', 'class' => 'clearfix gradingform_erubric'.$classsuffix));
+        $enrichedrubrictemplate .= html_writer::tag('table', $criteriastr, array('class' => 'criteria', 'id' => '{NAME}-criteria'));
         if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL) {
             $value = get_string('addcriterion', 'gradingform_erubric');
-            $input = html_writer::empty_tag('input',
-                                      array('type' => 'submit',
-                                            'name' => '{NAME}[criteria][addcriterion]',
-                                            'id' => '{NAME}-criteria-addcriterion',
-                                            'value' => $value,
-                                            'title' => $value));
+            $input = html_writer::empty_tag('input', array('type' => 'submit', 'name' => '{NAME}[criteria][addcriterion]', 'id' => '{NAME}-criteria-addcriterion', 'value' => $value, 'title' => $value));
             $enrichedrubrictemplate .= html_writer::tag('div', $input, array('class' => 'addcriterion'));
         }
         $enrichedrubrictemplate .= $this->erubric_edit_options($mode, $options);
@@ -1254,8 +948,8 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * Generates html template to view/edit the enriched rubric options. Expression {NAME} is used in
      * template for the form element name.
      *
-     * @param int $mode rubric display mode see {@link gradingform_erubric_controller}
-     * @param array $options display options for this rubric, defaults are: {@link gradingform_erubric_controller::get_default_options()}
+     * @param int $mode
+     * @param array $options
      * @return string
      */
     protected function erubric_edit_options($mode, $options) {
@@ -1275,12 +969,13 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             switch ($option) {
                 case 'sortlevelsasc':
                     // Display option as dropdown.
-                    $html .= html_writer::label(get_string($option, 'gradingform_erubric'), $attrs['id'], false, array('class' => 'label'));
+                    $html .= html_writer::tag('span', get_string($option, 'gradingform_erubric'), array('class' => 'label'));
                     $value = (int)(!!$value); // Make sure $value is either 0 or 1.
                     if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL) {
                         $selectoptions = array(0 => get_string($option.'0', 'gradingform_erubric'), 1 => get_string($option.'1', 'gradingform_erubric'));
                         $valuestr = html_writer::select($selectoptions, $attrs['name'], $value, false, array('id' => $attrs['id']));
                         $html .= html_writer::tag('span', $valuestr, array('class' => 'value'));
+                        // TODO add here button 'Sort levels'
                     } else {
                         $html .= html_writer::tag('span', get_string($option.$value, 'gradingform_erubric'), array('class' => 'value'));
                         if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FROZEN) {
@@ -1294,8 +989,6 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                     break;
                 default:
                     if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FROZEN && $value) {
-                        // Id should be different then the actual input added later.
-                        $attrs['id'] .= '_hidden';
                         $html .= html_writer::empty_tag('input', $attrs + array('type' => 'hidden', 'value' => $value));
                     }
                     // Display option as checkbox.
@@ -1307,19 +1000,14 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                     if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FROZEN || $mode == gradingform_erubric_controller::DISPLAY_PREVIEW) {
                         $attrs['disabled'] = 'disabled';
                         unset($attrs['name']);
-                        // Id should be different then the actual input added later.
-                        $attrs['id'] .= '_disabled';
                     }
                     $html .= html_writer::empty_tag('input', $attrs);
                     $html .= html_writer::tag('label', get_string($option, 'gradingform_erubric'), array('for' => $attrs['id']));
                     break;
             }
-            if (get_string_manager()->string_exists($option.'_help', 'gradingform_erubric')) {
-                $html .= $this->help_icon($option, 'gradingform_erubric');
-            }
-            $html .= html_writer::end_tag('div'); // Closing of .option div.
+            $html .= html_writer::end_tag('div'); // .option
         }
-        $html .= html_writer::end_tag('div'); // Closing of .options div.
+        $html .= html_writer::end_tag('div'); // .options
         return $html;
     }
 
@@ -1336,76 +1024,42 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * script might stop working.
      *
      * @param array $criteria data about the rubric design
-     * @param array $options display options for this rubric, defaults are: {@link gradingform_erubric_controller::get_default_options()}
-     * @param int $mode rubric display mode, see {@link gradingform_erubric_controller}
+     * @param int $mode rubric display mode @see gradingform_erubric_controller
      * @param string $elementname the name of the form element (in editor mode) or the prefix for div ids (in view mode)
      * @param array $values evaluation result
      * @return string
      */
     public function display_erubric($criteria, $options, $mode, $elementname = null, $values = null) {
 
-        // Since Moodle 2.6, this plugin can only function if Legacy and/or Internal log stores are enabled.
-        // Thus, if neither of them are active, there is no need to use this tool, so display the appropriate message and exit.
-        // Set the necessary variables.
-        global $CFG;
-        $uselegacyreader        = true;
-        $useinternalreader      = null;
-        $minloginternalreader   = null;
-        $logtable               = null;
-        $moodle260version   = '2013111800';
-
-        // Get the necessary variables if needed.
-        if ($CFG->version >= $moodle260version) {
-            require_once($CFG->dirroot . '/report/outline/locallib.php');
-            list($uselegacyreader, $useinternalreader, $minloginternalreader, $logtable) = report_outline_get_common_log_variables();
-        }
-
-        // If neither log stores are used.
-        if (!$uselegacyreader && !$useinternalreader) {
-            // Only show message to Teacher and Administrator, avoid students.
-            if ($mode == gradingform_erubric_controller::DISPLAY_VIEW || $mode == gradingform_erubric_controller::DISPLAY_PREVIEW_GRADED) {
-                return '';
-            } else {
-                return $this->box(
-                    html_writer::tag('div', get_string('err_missinglogstores', 'gradingform_erubric'), array('class' => 'missingmodule'))
-                    , 'generalbox');
-            }
-        }
-
         $criteriastr = '';
         $cnt = 0;
-        $maxcriterialevels = 0;
         foreach ($criteria as $id => $criterion) {
-            $criterion['class'] = $this->get_css_class_suffix($cnt++, count($criteria) - 1);
+            $criterion['class'] = $this->get_css_class_suffix($cnt++, sizeof($criteria) -1);
             $criterion['id'] = $id;
             $levelsstr = '';
+
             $levelcnt = 0;
             if (isset($values['criteria'][$id])) {
                 $criterionvalue = $values['criteria'][$id];
             } else {
                 $criterionvalue = null;
             }
-            $index = 1;
+
             $enrichedlevelstr = '';
             $valuesuffixstr = '';
-            // Avoid warnings...
-            if (!array_key_exists('criteriontype', $criterion)) {
+            if (!array_key_exists('criteriontype', $criterion)) // Avoid warnings...
                 $criterion['criteriontype'] = '';
-            }
-            if ($criterion['criteriontype']) {
-                if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENT) {
-                    if ($criterion['criteriontype'] == gradingform_erubric_controller::INTERACTION_TYPE_GRADE) {
+
+            if ($criterion['criteriontype']){
+                if ($criterion['referencetype']==gradingform_erubric_controller::REFERENCE_STUDENT){
+                    if ($criterion['criteriontype']==gradingform_erubric_controller::INTERACTION_TYPE_GRADE){
                         $valuesuffixstr = get_string('enrichedvaluesuffixpoints', 'gradingform_erubric');
-                    } else if (array_key_exists('collaborationtype', $criterion) &&
-                                $criterion['collaborationtype'] == gradingform_erubric_controller::COLLABORATION_TYPE_INTERACTIONS) {
+                    }else if (array_key_exists('collaborationtype', $criterion) && $criterion['collaborationtype']==gradingform_erubric_controller::COLLABORATION_TYPE_INTERACTIONS) {
                         $valuesuffixstr = get_string('enrichedvaluesuffixstudents', 'gradingform_erubric');
-                    } else if (array_key_exists('collaborationtype', $criterion) &&
-                                $criterion['collaborationtype'] == gradingform_erubric_controller::COLLABORATION_TYPE_FILE_ADDS) {
-                        $valuesuffixstr = get_string('enrichedvaluesuffixfiles', 'gradingform_erubric');
-                    } else {
+                    }else{
                         $valuesuffixstr = get_string('enrichedvaluesuffixtimes', 'gradingform_erubric');
                     }
-                } else {
+                }else{
                     $valuesuffixstr = get_string('enrichedvaluesuffixpercent', 'gradingform_erubric');
                 }
             }
@@ -1417,18 +1071,17 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
 
             foreach ($criterion['levels'] as $levelid => $level) {
                 $level['id'] = $levelid;
-                $level['class'] = $this->get_css_class_suffix($levelcnt++, count($criterion['levels']) - 1);
-                $level['tdwidth'] = 100 / count($criterion['levels']);
-                $level['index'] = $index;
+                $level['class'] = $this->get_css_class_suffix($levelcnt++, sizeof($criterion['levels']) -1);
+                $level['tdwidth'] = 100/count($criterion['levels']);
 
                 // If this level belongs to a just evaluated enriched criterion.
-                if (array_key_exists('checkedenrich', $criterion)) {
-                    if (array_key_exists('checked', $level)) {
+                if (array_key_exists('checkedenrich', $criterion)){
+                    if (array_key_exists('checked', $level)){
                         $level['class'] .= ' currentchecked';
                     }
 
                     // In case enrichment evaluation failed and can be overridden.
-                    if ($options['overideenrichmentevaluation'] && is_null($criterion['checkedenrich'])) {
+                    if ($options['overideenrichmentevaluation'] && is_null($criterion['checkedenrich'])){
 
                         // If this was already checked by evaluator display the choice.
                         $level['checked'] = (isset($criterionvalue['levelid']) && ((int)$criterionvalue['levelid'] === $levelid));
@@ -1441,20 +1094,18 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                         // Uncheck level in order not to affect enriched levels.
                         unset($level['checked']);
 
-                        // Enrichment evaluation successful, freeze levels!
-                    } else {
+                    // Enrichment evaluation succesful, freeze levels!
+                    }else{
                         $level['class'] .= ' currentenenriched';
                         $levelsstr .= $this->level_template(gradingform_erubric_controller::DISPLAY_EVAL_FROZEN, $options, $elementname, $id, $level);
                     }
 
-                    // Simple criteria.
-                } else {
+                // Simple criteria.
+                }else{
 
                     $level['checked'] = (isset($criterionvalue['levelid']) && ((int)$criterionvalue['levelid'] === $levelid));
 
-                    if ($level['checked'] && ($mode == gradingform_erubric_controller::DISPLAY_EVAL_FROZEN ||
-                                              $mode == gradingform_erubric_controller::DISPLAY_REVIEW ||
-                                              $mode == gradingform_erubric_controller::DISPLAY_VIEW)) {
+                    if ($level['checked'] && ($mode == gradingform_erubric_controller::DISPLAY_EVAL_FROZEN || $mode == gradingform_erubric_controller::DISPLAY_REVIEW || $mode == gradingform_erubric_controller::DISPLAY_VIEW)) {
                         $level['class'] .= ' checked';
                         // In mode DISPLAY_EVAL the class 'checked' will be added by JS if it is enabled. If JS is not enabled, the 'checked' class will only confuse.
                     }
@@ -1468,23 +1119,25 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
 
                 $level['enrichedvaluesuffix'] = $valuesuffixstr;
                 $enrichedlevelstr .= $this->enriched_level_template($mode, $options, $elementname, $id, $level);
-                $index++;
             }
 
             $criteriastr .= $this->criterion_template($mode, $options, $elementname, $criterion, $levelsstr, $criterionvalue);
 
             // If this rubric criterion is not enriched (for example, does not have a criterion type defined) and is not DISPLAY_EDIT_FULL
             // Do not display the enrichment fields.
-            if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL || $criterion['criteriontype']) {
-                $criteriastr .= $this->enriched_criterion_template($mode, $options, $elementname, $criterion, $enrichedlevelstr, $criterionvalue);
-            }
-            // Update the maximum number of criteria levels if needed.
-            if ($levelcnt > $maxcriterialevels) {
-                $maxcriterialevels = $levelcnt;
-            }
+            if ($mode == gradingform_erubric_controller::DISPLAY_EDIT_FULL || $criterion['criteriontype'])
+            $criteriastr .= $this->enriched_criterion_template($mode, $options, $elementname, $criterion, $enrichedlevelstr, $criterionvalue);
+
         }
 
-        return $this->erubric_template($mode, $options, $elementname, $criteriastr, $maxcriterialevels);
+        /*
+        if ($this->missingmodules){    // Display error message in case of missing course modules.
+            $enrichedrubrictemplate .= $this->box(
+                html_writer::tag('div', get_string('err_missingcoursemodulesedit', 'gradingform_erubric'), array('class' => 'missingmodule'))
+                , 'generalbox');
+        }
+        */
+        return $this->erubric_template($mode, $options, $elementname, $criteriastr);
     }
 
     /**
@@ -1493,21 +1146,12 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * This function automatically avaluates the student according to enrichment criteria
      * which are cross referenced with the data obtained through Learning Analytics data mining procedures.
      *
-     * For the new logging system from Moodle 2.6 onwards, Learning Analytics will only be obtained from
-     * Legacy log Table a.k.a. {log} or New Internal Log Table a.k.a {logstore_standard_log}.
-     *
-     * External logstores can't be used because their data structure and logging data are custom
-     * and can not be predicted. Only a log store creator would be able to change the data queries bellow
-     * according to his log store specifications.
-     *
-     *
      * @param array $criterion data about the rubric design
      * @param array $options enriched rubric options
      */
     protected function evaluate_enrichment(&$criterion, $options) {
         global $DB;
         global $PAGE;
-        global $CFG;
         $moduletypename         = null;
         $benchmarkstudent       = null;
         $benchmarkstudents      = null;
@@ -1521,71 +1165,69 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
 
         // Get the current assignment data.
         $curmoduleid = (int)$PAGE->cm->module;
+        $curmodulename = $PAGE->cm->modname;
+        $curcmid = $PAGE->cm->id;
         $gradingmoduleid = $PAGE->cm->instance;
         $courseid = $PAGE->cm->course;
-        $pageparams = $PAGE->url->params();
 
-        // ...**** For Moodle 2.6 onwards new logging system  ***... //
-        // If the Legacy Log is used, we work with it. If not, we use the new Internal Log (Standard).
-        // The old log is more efficient for the queries used bellow.
-        // If en External Logstore is used and both Legacy and new Internal logs are deactivated, do nothing, ...
-        // ...as we can't know in advance how the new external logs are stored and how the store's log tables are structured.
+        //**** For moodle 2.2 versions assignment modules ****//
+        $studentid = optional_param('userid', '', PARAM_INT);
 
-        // Set the necessary variables.
-        $uselegacyreader        = true;
-        $useinternalreader      = null;
-        $minloginternalreader   = null;
-        $logtable               = null;
-        $moodle260version   = '2013111800';
-
-        // Get the necessary variables if needed.
-        if ($CFG->version >= $moodle260version) {
-            require_once($CFG->dirroot . '/report/outline/locallib.php');
-            list($uselegacyreader, $useinternalreader, $minloginternalreader, $logtable) = report_outline_get_common_log_variables();
-        }
-
-        // ...**** For moodle 2.2 versions assignment modules ****...
-        $studentid = $pageparams['userid'];
-
-        // ...**** For moodle 2.3 onwards assignment module ****...
+        //**** For moodle 2.3 onwards assignment module ****//
         if (!$studentid) {
+            global $CFG;
             require_once($CFG->dirroot . '/mod/assign/locallib.php');
             $context = context_module::instance($PAGE->cm->id);
             $assignment = new assign($context, $PAGE->cm, $PAGE->cm->course);
             $useridlist = array_keys($assignment->list_participants(0, true));
             sort($useridlist); // The users list containing the IDs of students evaluated.
-            $rownum = $pageparams['rownum'];
+            $rownum = $_REQUEST['rownum'];
 
-            // Check if next or previous buttons are pressed in the evaluation form.
-            if (array_key_exists('saveandshownext', $pageparams) || array_key_exists('nosaveandnext', $pageparams)) {
+            // Check if next or previous buttons are pressed in the avaluation form.
+            if (array_key_exists('saveandshownext', $_REQUEST) || array_key_exists('nosaveandnext', $_REQUEST)) {
                 $rownum++;
             }
-            if (array_key_exists('nosaveandprevious', $pageparams)) {
+            if (array_key_exists('nosaveandprevious', $_REQUEST)) {
                 $rownum--;
             }
             $studentid = $useridlist[$rownum];
         }
 
-        // SQL for including all course enrolled students.
         $selectindividual = "= $studentid";
 
+        // SQL for including all course enroled students.
         $selectallstudents = "IN (SELECT u.id
-                                    FROM {role_assignments} ra
-                                        JOIN {context} c ON ra.contextid = c.id AND c.contextlevel = 50
-                                        JOIN {user} u ON u.id = ra.userid
-                                        JOIN {course} crse ON c.instanceid = crse.id
-                                    WHERE ra.roleid = 5
-                                        AND crse.id = $courseid)";
+                                  FROM {user} u
+                                      INNER JOIN {role_assignments} ra ON u.id = ra.userid
+                                      INNER JOIN {role} r ON ra.roleid = r.id
+                                      INNER JOIN {context} c ON ra.contextid = c.id
+                                  WHERE c.contextlevel = 50
+                                      AND c.instanceid = $courseid
+                                      AND r.name = 'Student')";
 
-        // Timestamp enrichment calculations according to assignment module.
-        if ($curmoduleid == $this->newassignmoduleid) {
+        // Timestamp enrichment calculations according to assignment module (old or new type assignments).
+        // In case of old type assignment...
+        if ($curmoduleid==$this->oldassignmoduleid) {
             // Get potential enrichment due date.
-            if ($options['timestampenrichmentend']) {
+            if ($options['timestampenrichmentend']){
+                $sql = 'SELECT asmnt.timedue AS duedate FROM {assignment} asmnt WHERE asmnt.id = '.$gradingmoduleid;
+                $untiltime = $DB->get_field_sql($sql, null);
+            }
+            // Get potential availability start time.
+            if ($options['timestampenrichmentstart']){
+                $sql = 'SELECT asmnt.timeavailable AS startdate FROM {assignment} asmnt WHERE asmnt.id = '.$gradingmoduleid;
+                $fromtime = $DB->get_field_sql($sql, null);
+            }
+
+        // In case of new type assignment...
+        }else if ($curmoduleid==$this->newassignmoduleid) {
+            // Get potential enrichment due date.
+            if ($options['timestampenrichmentend']){
                 $sql = 'SELECT asmnt.duedate AS duedate FROM {assign} asmnt WHERE asmnt.id = '.$gradingmoduleid;
                 $untiltime = $DB->get_field_sql($sql, null);
             }
             // Get potential availability start time.
-            if ($options['timestampenrichmentstart']) {
+            if ($options['timestampenrichmentstart']){
                 $sql = 'SELECT asmnt.allowsubmissionsfromdate AS startdate FROM {assign} asmnt WHERE asmnt.id = '.$gradingmoduleid;
                 $fromtime = $DB->get_field_sql($sql, null);
             }
@@ -1601,69 +1243,42 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                     $tempinstance = explode('->', $mdlinstance);
                     $moduleid = $tempinstance[0];
                     $instanceid = $tempinstance[1];
-                    $timefield = 'time';
-                    // Get log files according to current log store.
-                    if ($uselegacyreader) { // Old log.
-                        $sql = "SELECT COUNT(lg.id) AS TOTALS
-                                FROM {log} lg
-                                    INNER JOIN {course_modules} cm ON (lg.cmid = cm.id)
-                                WHERE   lg.userid $selectindividual
-                                    AND lg.action = 'view'
-                                    AND cm.course = $courseid
-                                    AND cm.module = $moduleid
-                                    AND cm.instance = $instanceid ";
-                    } else if ($useinternalreader) { // New log.
-                        $sql = "SELECT COUNT(lg.id) AS TOTALS
-                                FROM {" . $logtable . "} lg
-                                    INNER JOIN {modules} mdls ON (lg.objecttable = mdls.name)
-                                WHERE   lg.userid $selectindividual
-                                    AND lg.action = 'viewed'
-                                    AND lg.courseid = $courseid
-                                    AND mdls.id = $moduleid
-                                    AND lg.objectid = $instanceid ";
-                        $timefield = 'timecreated';
-                    }
 
-                    $this->get_value_from_learning_analytics($benchmarkstudent, $sql, 'lg', $timefield, $fromtime, $untiltime, 1);
+                    $sql = "SELECT COUNT(lg.id) AS TOTALS
+                            FROM {log} lg
+                                INNER JOIN {course_modules} cm ON (lg.cmid = cm.id)
+                            WHERE   lg.userid $selectindividual
+                                AND lg.action = 'view'
+                                AND cm.course = $courseid
+                                AND cm.module = $moduleid
+                                AND cm.instance = $instanceid ";
+
+                    $this->get_value_from_learning_analytics($benchmarkstudent, $sql, 'lg', 'time', $fromtime, $untiltime, 1);
 
                     // If the criterion has a global reference according to all students participating.
-                    if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS) {
-
-                        $sql = "SELECT COUNT(crse.id) AS Totals
-                                FROM {role_assignments} ra
-                                    JOIN {context} c ON ra.contextid = c.id AND c.contextlevel = 50
-                                    JOIN {user} u ON u.id = ra.userid
-                                    JOIN {course} crse ON c.instanceid = crse.id
-                                WHERE ra.roleid = 5
-                                    AND crse.id = $courseid ";
+                    if ($criterion['referencetype']==gradingform_erubric_controller::REFERENCE_STUDENTS){
+                        $sql = "SELECT COUNT(u.id) AS TOTALS
+                                  FROM {user} u
+                                      INNER JOIN {role_assignments} ra ON u.id = ra.userid
+                                      INNER JOIN {role} r ON ra.roleid = r.id
+                                      INNER JOIN {context} c ON ra.contextid = c.id
+                                  WHERE c.contextlevel = 50
+                                      AND c.instanceid = $courseid
+                                      AND r.name = 'Student'";
                         $count = $DB->get_field_sql($sql, null);
 
-                        if ($count && $count > 0) { // If there is at least one student.
+                        if ($count && $count>0) { // If there is at least one student.
                             $iterations++;
+                            $sql = "SELECT COUNT(lg.id) AS TOTALS
+                                    FROM {log} lg
+                                        INNER JOIN {course_modules} cm ON (lg.cmid = cm.id)
+                                    WHERE   lg.userid $selectallstudents
+                                        AND lg.action = 'view'
+                                        AND cm.course = $courseid
+                                        AND cm.module = $moduleid
+                                        AND cm.instance = $instanceid ";
 
-                            // Get log files according to curent log store.
-                            if ($uselegacyreader) { // Old log.
-                                $sql = "SELECT COUNT(lg.id) AS TOTALS
-                                        FROM {log} lg
-                                            INNER JOIN {course_modules} cm ON (lg.cmid = cm.id)
-                                        WHERE   lg.userid $selectallstudents
-                                            AND lg.action = 'view'
-                                            AND cm.course = $courseid
-                                            AND cm.module = $moduleid
-                                            AND cm.instance = $instanceid ";
-                            } else if  ($useinternalreader) { // New log.
-                                $sql = "SELECT COUNT(lg.id) AS TOTALS
-                                        FROM {" . $logtable . "} lg
-                                            INNER JOIN {modules} mdls ON (lg.objecttable = mdls.name)
-                                        WHERE   lg.userid $selectallstudents
-                                            AND lg.action = 'viewed'
-                                            AND lg.courseid = $courseid
-                                            AND mdls.id = $moduleid
-                                            AND lg.objectid = $instanceid ";
-                                $timefield = 'timecreated';
-                            }
-
-                            $this->get_value_from_learning_analytics($benchmarkstudents, $sql, 'lg', $timefield, $fromtime, $untiltime, $count);
+                            $this->get_value_from_learning_analytics($benchmarkstudents, $sql, 'lg', 'time', $fromtime, $untiltime, $count);
                         }
                     }
                 }
@@ -1676,6 +1291,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                     $tempinstance = explode('->', $mdlinstance);
                     $moduleid = $tempinstance[0];
                     $instanceid = $tempinstance[1];
+                    $iterations++;
                     $tempstudentcurrgrade = null;
 
                     $sql = "SELECT gr.finalgrade AS Grade
@@ -1689,19 +1305,22 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
 
                     $this->get_value_from_learning_analytics($tempstudentcurrgrade, $sql, null, null, null, null, 1);
 
-                    // If the student has not been graded for this course assignment, ...
-                    // ...there is no point on calculating his or the others benchmark.
+                    // If the student has not been graded for this course assignment,
+                    // there is no point on calculating his or the others benchmark.
                     if (!is_null($tempstudentcurrgrade)) {
-                        $iterations++;
                         // Get maximum grade score for current assignment module in order to define student performance according to 100 scale.
-                        $sql  = "SELECT assmnt.grade AS maxgrade
-                                 FROM {assign} assmnt
-                                 WHERE   assmnt.id = $instanceid";
+                        $sql = "SELECT assmnt.grade AS maxgrade ";
+                        if ($moduleid==$this->newassignmoduleid) {
+                            $sql .= "FROM {assign} assmnt ";    // New type assignment modules (Moodle 2.3+)
+                        }else{
+                            $sql .= "FROM {assignment} assmnt "; // Old type assignment modules (Moodle 2.2)
+                        }
+                        $sql .= "WHERE   assmnt.id = $instanceid";
                         $tempassignmax = (float)$DB->get_field_sql($sql, null);
-                        $benchmarkstudent += (float)round($tempstudentcurrgrade / $tempassignmax * 100, 2);
+                        $benchmarkstudent += (float)round($tempstudentcurrgrade/$tempassignmax*100, 2);
 
                         // If the criterion has a global reference according to all students grades.
-                        if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS) {
+                        if ($criterion['referencetype']==gradingform_erubric_controller::REFERENCE_STUDENTS){
                             $sql = "SELECT AVG(gr.finalgrade) AS AvgGrades
                                 FROM {grade_grades} gr
                                     INNER JOIN {grade_items} gi ON (gi.id = gr.itemid)
@@ -1712,224 +1331,123 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                     AND gi.iteminstance = $instanceid ";
 
                             $tempstudentsgrade = $DB->get_field_sql($sql, null);
-                            if (!is_null($tempstudentsgrade)) { // If the value is valid.
-                                $benchmarkstudents += (float)round($tempstudentsgrade / $tempassignmax * 100, 2);
+                            if (!is_null($tempstudentsgrade)){ // If the value is valid.
+                                //$tempstudentsgrade = (float)$DB->get_field_sql($sql, null);
+                                $benchmarkstudents += (float)round($tempstudentsgrade/$tempassignmax*100, 2);
                             }
                         }
                     }
                 }
                 break;
 
-            // In case of checking student collaboration, perform data mining according to collaboration type:...
-            // ...Entries, for simple log occurrences in selected course modules.
-            // ...File Adds, for summing number of file adds (not number of files!), from course modules of type forum.
-            // ...Replies, for summing number of replied posts, from course modules of type forum.
-            // ...Interactions, for total number of students the evaluated student interacted during using the selected course modules.
+            // In case of checking student collaboration, perform data mining according to collaboration type:
+            // - Entries, for simple log occurences in selected course modules,
+            // - File Adds, for summing number of file adds (not number of files!), from course modules of type forum.
+            // - Replies, for summing number of replied posts, from course modules of type forum.
+            // - Interactions, for total number of students the evaluated student interacted during using the selected course modules.
             case gradingform_erubric_controller::INTERACTION_TYPE_COLLABORATION:
                 $moduletypename = 'activity';
 
                 // In case of students interactions, benchmarks will be calculated after all modules have been processed.
-                if ($criterion['collaborationtype'] == gradingform_erubric_controller::COLLABORATION_TYPE_INTERACTIONS) {
-                    $distinctusersfound = array();
+                if ($criterion['collaborationtype']==gradingform_erubric_controller::COLLABORATION_TYPE_INTERACTIONS){
+                    $distinctUsersFound = array();
                 }
 
                 // In case of students file submissions, benchmarks will be initialised with zero values.
-                if ($criterion['collaborationtype'] == gradingform_erubric_controller::COLLABORATION_TYPE_FILE_ADDS) {
+                if ($criterion['collaborationtype']==gradingform_erubric_controller::COLLABORATION_TYPE_FILE_ADDS){
                     $benchmarkstudent = 0;
-                    if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS) {
-                        $benchmarkstudents = 0;
-                    }
+                    if ($criterion['referencetype']==gradingform_erubric_controller::REFERENCE_STUDENTS) $benchmarkstudents = 0;
                 }
 
                 foreach ($criterion['coursemodules'][$moduletypename][0] as $mdlinstance) { // Iterate through course modules.
                     $tempinstance = explode('->', $mdlinstance);
                     $moduleid = $tempinstance[0];
                     $instanceid = $tempinstance[1];
-                    $logtablename = 'log';
-                    $timefield = 'time';
 
                     switch ($criterion['collaborationtype']) {
 
-                        // In case of checking simple entries in forums and chats...
-                        // ...just check for 'add post' or 'talk' actions inside moodle log.
+                        // In case of checking simple entries in forums and chats,
+                        // just check for 'add post' or 'talk' actions inside moodle log.
                         case gradingform_erubric_controller::COLLABORATION_TYPE_ENTRIES:
+                            $sql = "SELECT COUNT(lg.id) AS TOTALS
+                                    FROM {log} lg
+                                        INNER JOIN {course_modules} cm ON (lg.cmid = cm.id)
+                                    WHERE   lg.userid $selectindividual
+                                        AND (lg.action = 'add post' OR lg.action = 'talk')
+                                        AND cm.course = $courseid
+                                        AND cm.module = $moduleid
+                                        AND cm.instance = $instanceid ";
 
-                            // Get log files according to curent log store.
-                            if ($uselegacyreader) { // Old log.
-                                $sql = "SELECT COUNT(lg.id) AS TOTALS
+                            $this->get_value_from_learning_analytics($benchmarkstudent, $sql, 'lg', 'time', $fromtime, $untiltime, 1);
+
+                            // If the criterion has a global reference according to all students collaborations.
+                            if ($criterion['referencetype']==gradingform_erubric_controller::REFERENCE_STUDENTS){
+                                $count = 0;
+
+                                $sql = "SELECT DISTINCT (lg.userid) AS userids
                                         FROM {log} lg
                                             INNER JOIN {course_modules} cm ON (lg.cmid = cm.id)
-                                        WHERE   lg.userid $selectindividual
+                                        WHERE   lg.userid $selectallstudents
                                             AND (lg.action = 'add post' OR lg.action = 'talk')
                                             AND cm.course = $courseid
                                             AND cm.module = $moduleid
                                             AND cm.instance = $instanceid ";
-                            } else if ($useinternalreader) { // New log.
-                                // There is no direct way to get both posts and talks from the new log...
-                                // ...according to the module id (forum or chat) and instance id (forum id or chat id),
-                                // ...so we must seperate the original log query with two different queries...
-                                // ...that don't have to refer to the new log any more.
-                                // Bye bye new log... Bummer :(.
 
-                                // If this is a forum course module.
-                                if ($moduleid == $this->forummoduleid) {
-                                    $sql = "SELECT COUNT(fp.id) AS TOTALS
-                                            FROM {forum_posts} fp
-                                                INNER JOIN {forum_discussions} fdcs ON (fp.discussion = fdcs.id)
-                                            WHERE   fp.userid $selectindividual
-                                                AND fdcs.course = $courseid
-                                                AND fdcs.forum = $instanceid ";
-                                    $logtablename = 'fp';
-                                    $timefield = 'created';
-                                    // Else only if this is a chat course module.
-                                } else if ($moduleid == $this->chatmoduleid) {
-                                    $sql = "SELECT COUNT(chms.id) AS TOTALS
-                                            FROM {chat_messages} chms
-                                            WHERE   chms.userid $selectindividual
-                                                AND chms.issystem = 0
-                                                AND chms.chatid = $instanceid ";
-                                    $logtablename = 'chms';
-                                    $timefield = 'timestamp';
-                                }
-                            }
-
-                            $this->get_value_from_learning_analytics($benchmarkstudent, $sql, $logtablename, $timefield, $fromtime, $untiltime, 1);
-
-                            // If the criterion has a global reference according to all students' collaborations,...
-                            // ...we hold accountable only participating students. If a student is absent (no log entries),
-                            // ...he is not accounted for.
-                            if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS) {
-                                $count = 0;
-                                // Get log files according to current log store.
-                                if ($uselegacyreader) { // Old log.
-                                    $sql = "SELECT DISTINCT (lg.userid) AS userids
+                                $participatingstudents = $this->timestamp_and_count_active_studends_involved($count, $sql, 'lg', 'time', $fromtime, $untiltime);
+                                if ($count>0) { // If there is at least one student.
+                                    $iterations++;
+                                    $sql = "SELECT COUNT(lg.id) AS TOTALS
                                             FROM {log} lg
                                                 INNER JOIN {course_modules} cm ON (lg.cmid = cm.id)
-                                            WHERE   lg.userid $selectallstudents
+                                            WHERE   lg.userid IN ($participatingstudents)
                                                 AND (lg.action = 'add post' OR lg.action = 'talk')
                                                 AND cm.course = $courseid
                                                 AND cm.module = $moduleid
                                                 AND cm.instance = $instanceid ";
 
-                                    // Count participating students and return the sql query to count their entries next.
-                                    $participatingstudents = $this->timestamp_and_count_active_studends_involved($count, $sql, 'lg', 'time', $fromtime, $untiltime);
-
-                                    if ($count > 0) { // If there is at least one student.
-                                        $iterations++;
-                                        $sql = "SELECT COUNT(lg.id) AS TOTALS
-                                                FROM {log} lg
-                                                    INNER JOIN {course_modules} cm ON (lg.cmid = cm.id)
-                                                WHERE   lg.userid IN ($participatingstudents)
-                                                    AND (lg.action = 'add post' OR lg.action = 'talk')
-                                                    AND cm.course = $courseid
-                                                    AND cm.module = $moduleid
-                                                    AND cm.instance = $instanceid ";
-
-                                        $this->get_value_from_learning_analytics($benchmarkstudents, $sql, 'lg', 'time', $fromtime, $untiltime, $count);
-                                    }
-                                } else if ($useinternalreader) { // New log.
-                                    // There is no direct way to get both posts and talks from the new log...
-                                    // ...according to the module id (forum or chat) and instance id (forum id or chat id),...
-                                    // ...so we must separate the original log query with two different queries that don't have to refer to the new log any more.
-                                    // Bye bye new log... Bummer :(.
-
-                                    // If this is a forum course module.
-                                    if ($moduleid == $this->forummoduleid) {
-                                        $logtablename = 'fp';
-                                        $timefield = 'created';
-                                        $sql = "SELECT DISTINCT (fp.userid) AS userids
-                                                FROM {forum_posts} fp
-                                                    INNER JOIN {forum_discussions} fdcs ON (fp.discussion = fdcs.id)
-                                                WHERE   fp.userid $selectallstudents
-                                                    AND fdcs.course = $courseid
-                                                    AND fdcs.forum = $instanceid ";
-
-                                        // Count participating students and return the sql query to count their entries next.
-                                        $participatingstudents = $this->timestamp_and_count_active_studends_involved($count, $sql, $logtablename, $timefield, $fromtime, $untiltime);
-                                        if ($count > 0) { // If there is at least one student.
-                                            $iterations++;
-                                            $sql = "SELECT COUNT(fp.id) AS TOTALS
-                                                    FROM {forum_posts} fp
-                                                        INNER JOIN {forum_discussions} fdcs ON (fp.discussion = fdcs.id)
-                                                    WHERE   fp.userid IN ($participatingstudents)
-                                                        AND fdcs.course = $courseid
-                                                        AND fdcs.forum = $instanceid ";
-
-                                            $this->get_value_from_learning_analytics($benchmarkstudents, $sql, $logtablename, $timefield, $fromtime, $untiltime, $count);
-                                        }
-
-                                        // Else only if this is a chat course module.
-                                    } else if ($moduleid == $this->chatmoduleid) {
-                                        $logtablename = 'chms';
-                                        $timefield = 'timestamp';
-                                        $sql = "SELECT DISTINCT (chms.userid) AS userids
-                                                FROM {chat_messages} chms
-                                                WHERE   chms.userid $selectallstudents
-                                                    AND chms.issystem = 0
-                                                    AND chms.chatid = $instanceid ";
-
-                                        // Count participating students and return the sql query to count their entries next.
-                                        $participatingstudents = $this->timestamp_and_count_active_studends_involved($count, $sql, $logtablename, $timefield, $fromtime, $untiltime);
-                                        if ($count > 0) { // If there is at least one student.
-                                            $iterations++;
-                                            $sql = "SELECT COUNT(chms.id) AS TOTALS
-                                                    FROM {chat_messages} chms
-                                                    WHERE   chms.userid IN ($participatingstudents)
-                                                        AND chms.issystem = 0
-                                                        AND chms.chatid = $instanceid ";
-
-                                            $this->get_value_from_learning_analytics($benchmarkstudents, $sql, $logtablename, $timefield, $fromtime, $untiltime, $count);
-                                        }
-                                    }
+                                    $this->get_value_from_learning_analytics($benchmarkstudents, $sql, 'lg', 'time', $fromtime, $untiltime, $count);
                                 }
                             }
                             break;
 
-                        // In case of checking addition occurrences of files in forums, ...
-                        // ...just count the attachment occurrences in forum posts.
+                        // In case of checking addition occurences of files in forums,
+                        // just count the attachement occurences (should be number of files, but it isn't...) in forum posts.
                         case gradingform_erubric_controller::COLLABORATION_TYPE_FILE_ADDS:
-                            $sql = "SELECT COUNT(fls.id) AS TOTALS
+                            $sql = "SELECT SUM(fp.attachment) AS TOTALS
                                     FROM {forum_posts} fp
                                         INNER JOIN {forum_discussions} fd ON (fd.id = fp.discussion)
-                                        INNER JOIN {files} fls ON (fls.itemid = fp.id)
                                     WHERE   fp.userid $selectindividual
-                                        AND fls.filesize > 0
-                                        AND fls.component = 'mod_forum'
                                         AND fd.forum = $instanceid ";
 
                             $this->get_value_from_learning_analytics($benchmarkstudent, $sql, 'fp', 'created', $fromtime, $untiltime, 1);
 
-                            // If the criterion has a global reference according to all students file submissions,...
-                            // ...check all students participated in the forum, even if they haven't submited anything.
-                            // Leave out all those who didn't participated in the forum at all.
-                            if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS) {
+                            // If the criterion has a global reference according to all students file submissions.
+                            if ($criterion['referencetype']==gradingform_erubric_controller::REFERENCE_STUDENTS){
                                 $count = 0;
+
                                 $sql = "SELECT DISTINCT (fp.userid) AS userids
                                         FROM {forum_posts} fp
                                             INNER JOIN {forum_discussions} fd ON (fd.id = fp.discussion)
                                         WHERE   fp.userid $selectallstudents
+                                            AND fp.attachment > 0
                                             AND fd.forum = $instanceid ";
 
                                 $participatingstudents = $this->timestamp_and_count_active_studends_involved($count, $sql, 'fp', 'created', $fromtime, $untiltime);
-                                if ($count > 0) { // If there is at least one student.
+                                if ($count>0) { // If there is at least one student.
                                     $iterations++;
-                                    $sql = "SELECT COUNT(fls.id) AS TOTALS
+                                    $sql = "SELECT SUM(fp.attachment) AS TOTALS
                                             FROM {forum_posts} fp
                                                 INNER JOIN {forum_discussions} fd ON (fd.id = fp.discussion)
-                                                INNER JOIN {files} fls ON (fls.itemid = fp.id)
                                             WHERE   fp.userid IN ($participatingstudents)
-                                                AND fls.filesize > 0
-                                                AND fls.component = 'mod_forum'
                                                 AND fd.forum = $instanceid ";
 
                                     $this->get_value_from_learning_analytics($benchmarkstudents, $sql, 'fp', 'created', $fromtime, $untiltime, $count);
-
                                 }
                             }
                             break;
 
-                        // In case of checking student replies in forums,...
-                        // ...just count all student posts except self-replies and the ones referring to root post a.k.a. discussion.
+                        // In case of checking student replies in forums,
+                        // just count all student posts except self-replies and the ones referring to root post.
                         case gradingform_erubric_controller::COLLABORATION_TYPE_REPLIES:
                             $sql = "SELECT COUNT(fp.id) AS TOTALS
                                     FROM {forum_posts} fp
@@ -1947,7 +1465,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                             $this->get_value_from_learning_analytics($benchmarkstudent, $sql, 'fp', 'created', $fromtime, $untiltime, 1);
 
                             // If the criterion has a global reference according to all students replies.
-                            if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS) {
+                            if ($criterion['referencetype']==gradingform_erubric_controller::REFERENCE_STUDENTS){
                                 $count = 0;
 
                                 $sql = "SELECT DISTINCT (fp.userid) AS userids
@@ -1964,7 +1482,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                             AND fd.forum = $instanceid ";
 
                                 $participatingstudents = $this->timestamp_and_count_active_studends_involved($count, $sql, 'fp', 'created', $fromtime, $untiltime);
-                                if ($count > 0) { // If there is at least one student.
+                                if ($count>0) { // If there is at least one student.
                                     $iterations++;
                                     $sql = "SELECT COUNT(fp.id) AS TOTALS
                                             FROM {forum_posts} fp
@@ -1987,18 +1505,18 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                         // 1. Retrieve all student ids (including the evaluated) for each course module.
                         // 2. Check if current evaluated student's id exists in each module of interacted student's ids.
                         // 3. Update the pile of current evaluated student's, interacted user's ids.
-                        // 4. Count the pile's size to retrieve the number of all students' ids,...
-                        //    ...thus get the number of all students the current one interacted.
+                        // 4. Count the pile's size to retieve the number of all student's ids,
+                        //    thus get the nubmer of all students the current one interacted.
                         // In case of checking all students do the above for every student interacted in each course module...
-                        //    ...(!!!Run time possible delay or script timeout for checking many users!!!)...
+                        //    (!!!Run time possible delay or script timeout for checking many users!!!)
                         case gradingform_erubric_controller::COLLABORATION_TYPE_INTERACTIONS:
 
-                            if ($moduleid == $this->forummoduleid) { // Check forum modules.
+                            if ($moduleid==$this->forummoduleid) { // Check forum modules.
 
                                 // Get each forum discussion and check interactions.
                                 $tempsql = "SELECT fd.id AS discussionid FROM {forum_discussions} fd WHERE fd.forum = $instanceid";
                                 $discussions = $DB->get_records_sql($tempsql, null);
-                                foreach ($discussions as $dscn) {
+                                foreach ($discussions as $dscn){
                                     $discussionid = $dscn->discussionid;
                                     $sql = "SELECT DISTINCT(fp.userid) AS usersid
                                             FROM {forum_posts} fp
@@ -2010,94 +1528,86 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                                     $tempusersarray = null;
                                     $this->get_value_from_learning_analytics($tempusersarray, $sql, 'fp', 'created', $fromtime, $untiltime, null);
 
-                                    if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENT) { // Check only current student evaluated.
+                                    if ($criterion['referencetype']==gradingform_erubric_controller::REFERENCE_STUDENT){ // Check only current student evaluated.
                                         if (!is_null($tempusersarray)) {
                                             $studentin = false;
 
                                             // Check all participating students to see if current student's id was in.
-                                            foreach ($tempusersarray as $tempid) {
-                                                if (isset($tempid->usersid) && $tempid->usersid == $studentid) {
+                                            foreach($tempusersarray as $tempid){
+                                                if (isset($tempid->usersid) && $tempid->usersid==$studentid) {
                                                     $studentin = true;
                                                     break;
                                                 }
                                             }
 
-                                            if ($studentin) { // If student took part in that discussion.
-                                                foreach ($tempusersarray as $tempid) { // Check all participating students.
+                                            if ($studentin){ // If student took part in that discussion.
+                                                foreach($tempusersarray as $tempid){ // Check all participating students.
                                                     // If temp user id not the same with the student's and is unique, add to pile.
-                                                    if ($tempid->usersid != $studentid &&
-                                                        (!isset($distinctusersfound[$studentid]) ||
-                                                            !in_array($tempid->usersid, $distinctusersfound[$studentid]))) {
-                                                                $distinctusersfound[$studentid][] = $tempid->usersid;
-                                                    }
+                                                    if ($tempid->usersid!=$studentid &&
+                                                        (!isset($distinctUsersFound[$studentid]) ||
+                                                            !in_array($tempid->usersid, $distinctUsersFound[$studentid])
+                                                        )) $distinctUsersFound[$studentid][] = $tempid->usersid;
                                                 }
                                             }
                                         }
 
-                                        // Check all students along with the current student evaluated, if there are any.
-                                    } else if (!is_null($tempusersarray)) {
-                                        // Check all participating students in order to create and update...
-                                        // ...each one's unique pile of interactions.
-                                        foreach ($tempusersarray as $tempcurrentid) { // Loop A.
+                                    // Check all students along with the current student evaluated, if there are any.
+                                    }else if(!is_null($tempusersarray)){
+                                        // Check all participating students in order to create and update
+                                        // each one's unique pile of interactions.
+                                        foreach($tempusersarray as $tempcurrentid){ // loop A
                                             // Check all participating students again, to update the pile of the user selected by previous loop.
-                                            foreach ($tempusersarray as $tempid) { // Loop B.
-                                                // If temp user's id (loop B) is unique and not the same with user's id (loop A),...
-                                                // ...add to pile (of user A).
+                                            foreach($tempusersarray as $tempid){ // loop B
+                                                // If temp user's id (loop B) is unique and not the same with user's id (loop A),
+                                                // add to pile (of user A).
                                                 if (isset($tempid->usersid) &&
                                                     isset($tempcurrentid->usersid) &&
-                                                    $tempid->usersid != $tempcurrentid->usersid &&
-                                                    (!isset($distinctusersfound[$tempcurrentid->usersid]) ||
-                                                        !in_array($tempid->usersid, $distinctusersfound[$tempcurrentid->usersid]))) {
-                                                            $distinctusersfound[$tempcurrentid->usersid][] = $tempid->usersid;
-                                                }
+                                                    $tempid->usersid!=$tempcurrentid->usersid &&
+                                                    (!isset($distinctUsersFound[$tempcurrentid->usersid]) ||
+                                                        !in_array($tempid->usersid, $distinctUsersFound[$tempcurrentid->usersid])
+                                                    )) $distinctUsersFound[$tempcurrentid->usersid][] = $tempid->usersid;
                                             }
                                         }
                                     }
                                 }
-                            } else { // Check chat modules.
-                                $tempusersarray = $this->get_interacted_users_according_to_chat_sessions($instanceid, $fromtime, $untiltime, $selectallstudents);
+                            }else{ // Check chat modules.
+                                $tempusersarray = $this->get_interacted_users_according_to_chat_sessions($instanceid, $fromtime, $untiltime);
+
                                 if (empty($tempusersarray)) {
                                     break;
                                 }
 
-                                if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENT) { // Check only current student evaluated.
+                                if ($criterion['referencetype']==gradingform_erubric_controller::REFERENCE_STUDENT){ // Check only current student evaluated.
 
                                     // Go through all chat sessions to distinct interacted students.
-                                    foreach ($tempusersarray as $tempsession) {
-                                        // Check only sessions that contain the current student.
-                                        if (in_array($studentid, $tempsession)) {
-                                            foreach ($tempsession as $tempuserid) {
-                                                // If student's id is in current session and temp user id not the same with the student's and is unique, add to pile.
-                                                if ($tempuserid != $studentid &&
-                                                    (!isset($distinctusersfound[$studentid]) ||
-                                                    !in_array($tempuserid, $distinctusersfound[$studentid]))) {
-                                                        $distinctusersfound[$studentid][] = $tempuserid;
-                                                }
+                                    foreach($tempusersarray as $tempsession){
+                                        if (in_array($studentid, $tempsession)){ // If user exists in current chat session.
+                                            foreach($tempsession as $tempuserid){
+                                                // If temp user id not the same with the student's and is unique, add to pile.
+                                                if ($tempuserid!=$studentid &&
+                                                    (!isset($distinctUsersFound[$studentid]) ||
+                                                        !in_array($tempuserid, $distinctUsersFound[$studentid])
+                                                    )) $distinctUsersFound[$studentid][] = $tempuserid;
                                             }
                                         }
                                     }
 
-                                } else {
-                                    // Check all participating students in order to create and update...
-                                    // ...each one's unique pile of interactions.
-                                    $totalusersinteracted = array();
-                                    foreach ($tempusersarray as $tempsession) { // Iterate through all chat sessions.
-                                        $totalusersinteracted = array_merge($totalusersinteracted, $tempsession); // Put the all in one pile.
-                                    }
-                                    $totalusersinteracted = array_unique($totalusersinteracted); // Clean the pile, keep unique users' id.
-                                    foreach ($totalusersinteracted as $tempuserid1) { // Iterate through the clean users list.
-                                        foreach ($tempusersarray as $tempsession) {
-                                            if (in_array($tempuserid1, $tempsession)) {
-                                                foreach ($tempsession as $tempuserid2) {
-                                                    // If student's id is in current session and temp user id not the same with the student's and is unique, add to pile.
-                                                    if ($tempuserid1 != $tempuserid2 &&
-                                                        (!isset($distinctusersfound[$tempuserid1]) || !in_array($tempuserid2, $distinctusersfound[$tempuserid1]))) {
-                                                            $distinctusersfound[$tempuserid1][] = $tempuserid2;
-                                                    }
-                                                }
+                                }else {
+
+                                    // Check all participating students in order to create and update
+                                    // each one's unique pile of interactions.
+                                    foreach($tempusersarray as $tempsession){ // Iterate through all chat sessions.
+                                        foreach($tempsession as $tempuserid1){ // Get users list.
+                                            foreach($tempsession as $tempuserid2){ // Get users list again.
+                                                // If temp2 user id not the same with temp1's and is unique, add to temp1's pile.
+                                                if ($tempuserid1!=$tempuserid2 &&
+                                                    (!isset($distinctUsersFound[$tempuserid1]) ||
+                                                        !in_array($tempuserid2, $distinctUsersFound[$tempuserid1])
+                                                    )) $distinctUsersFound[$tempuserid1][] = $tempuserid2;
                                             }
                                         }
                                     }
+
                                 }
                             }
                             break;
@@ -2107,45 +1617,51 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
         }
 
         // When user interactions are checked, benchmarks are calculated after all course modules are processed and only if there are interactions.
-        if ($criterion['collaborationtype'] == gradingform_erubric_controller::COLLABORATION_TYPE_INTERACTIONS && !empty($distinctusersfound)) {
-            if (array_key_exists($studentid, $distinctusersfound)) { // Check current student evaluated.
-                $benchmarkstudent = count($distinctusersfound[$studentid]);
-            } else {
+        if ($criterion['collaborationtype']==gradingform_erubric_controller::COLLABORATION_TYPE_INTERACTIONS && !empty($distinctUsersFound)){
+            if (array_key_exists($studentid, $distinctUsersFound)) { // Check current student evaluated.
+                $benchmarkstudent = count($distinctUsersFound[$studentid]);
+            }else{
                 $benchmarkstudent = 0;
             }
 
-            if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS) { // Check all students participated.
+            if ($criterion['referencetype']==gradingform_erubric_controller::REFERENCE_STUDENTS){ // Check all students participated.
                 $benchmarkstudents = 0;
-                $iterations = count($distinctusersfound);
-                foreach ($distinctusersfound as $tempstudentid => $otherstudents) {
-                    $benchmarkstudents += count($distinctusersfound[$tempstudentid]);
+                $iterations = count($distinctUsersFound);
+                foreach($distinctUsersFound as $tempstudentid=>$otherstudents){
+                    $benchmarkstudents += count($distinctUsersFound[$tempstudentid]);
                 }
             }
         }
 
-        // If there is a benchmark for current student evaluated, calculate the criterion benchmark. Else do nothing, leave everything null.
-        if (!is_null($benchmarkstudent)) {
-            if ($criterion['collaborationtype'] <> gradingform_erubric_controller::COLLABORATION_TYPE_INTERACTIONS &&
-                ($criterion['criteriontype'] == gradingform_erubric_controller::INTERACTION_TYPE_GRADE ||
-                 $criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS)) {
-                    $benchmarkstudent = $iterations ? (float)round($benchmarkstudent / $iterations, 2) : null;
+        if (!is_null($benchmarkstudent)){
+            if ($criterion['collaborationtype']<>gradingform_erubric_controller::COLLABORATION_TYPE_INTERACTIONS &&
+                ($criterion['criteriontype']==gradingform_erubric_controller::INTERACTION_TYPE_GRADE ||
+                 $criterion['referencetype']==gradingform_erubric_controller::REFERENCE_STUDENTS)){
+                $benchmarkstudent = (int)round($benchmarkstudent/$iterations, 0);
             }
 
-            if ($criterion['referencetype'] == gradingform_erubric_controller::REFERENCE_STUDENTS) { // Check students benchmark.
-                if ($benchmarkstudents) {
-                    // To avoid division by zero for small students' benchmark, make two point precision rounding.
-                    $benchmarkstudents = (float)round($benchmarkstudents / $iterations, 2);
-                    $benchmarkcriterion = (int)round($benchmarkstudent * 100 / $benchmarkstudents);
-                } else {
+            if ($criterion['referencetype']==gradingform_erubric_controller::REFERENCE_STUDENTS){ // Check students benchmark.
+                if ($benchmarkstudents){
+                    // To avoid division by zero for small students benchmarks, make two point precision rounding.
+                    // For numbers greater than 1 make zero point precision rounding.
+                    if ($benchmarkstudents>=1){
+                        $benchmarkstudents = (int)round($benchmarkstudents/$iterations, 0);
+                        $benchmarkcriterion = (int)round($benchmarkstudent*100/$benchmarkstudents);
+                    }else{
+                        $benchmarkstudents = (float)round($benchmarkstudents/$iterations, 2);
+                        $benchmarkcriterion = (int)round($benchmarkstudent*100/$benchmarkstudents);
+                        $benchmarkstudents = (int)round($benchmarkstudents, 0);
+                    }
+                }else{
                     $benchmarkcriterion = null;
                 }
-            } else {
+            }else{
                 $benchmarkcriterion = (int)$benchmarkstudent; // Just convert student benchmark to integer.
             }
         }
 
-        // Run enrichment procedure to return the appropriate selected level (if exists),...
-        // ...and store criterion benchmarks for future reference.
+        // Run enrichment procedure to return the appropriate selected level (if exists),
+        // and store criterion benchmarks for future reference.
         $criterion['checkedenrich'] = $this->get_enriched_level_from_benchmark($criterion['levels'], $benchmarkcriterion, $criterion['operator'], $options['sortlevelsasc']);
         $criterion['enrichedbenchmark'] = $benchmarkcriterion;
         $criterion['enrichedbenchmarkstudent'] = $benchmarkstudent;
@@ -2161,13 +1677,12 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * If a valid value results, it gets converted to float and added to the corresponding variable.
      * If not, the corresponding variable remains as is.
      *
-     * @param float/array $var the corresponded variable
+     * @param float/array &$var the corresponded variable
      * @param string $sqlstr the initial sql string to begin the query
      * @param string $table the enriched criterion operator
      * @param string $col the assortment of levels according to enriched rubric options
      * @param string $from the begin time for a potential time stamp
      * @param string $until the end time for a potential time stamp
-     * @param int $totals the total number of module instances
      */
     protected function get_value_from_learning_analytics(&$var, $sqlstr, $table, $col, $from, $until, $totals) {
         GLOBAL $DB;
@@ -2179,25 +1694,24 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
             $sqlstr .= "AND ".$table.".".$col." <= $until ";
         }
 
-        if (strpos($sqlstr, 'DISTINCT') == 7) { // If we want a list of values for checking Interactions.
+        if (strpos($sqlstr, 'DISTINCT')==7) { // If we want a list of values for checking Interactions.
             $temp = $DB->get_records_sql($sqlstr, null);
-        } else {
+        }else{
             $temp = $DB->get_field_sql($sqlstr, null);
         }
 
-        // If the value is valid (even zero) or is array and not empty.
-        if ((is_array($temp) && !empty($temp)) || (!is_array($temp) && !is_null($temp) && strlen((String)$temp) > 0)) {
-            if (!is_array($temp)) { // Convert to float only numbers.
-                $temp = (float)$temp / $totals;
+        if (!is_null($temp) && strlen((String)$temp)>0){ // If the value is valid (even zero).
+            if (!is_array($temp)){ // Convert to float only numbers.
+                $temp = (float)$temp/$totals;
                 $temp = round($temp, 2);
                 $var += $temp;
-            } else {
-                foreach ($temp as $key => $obj) { // This will be a one step loop.
-                    if (property_exists($obj, 'usersid')) { // If this is an array requested for 'Interactions' collaboration type.
+            }else{
+                foreach($temp as $key=>$obj){ // This will be a one step loop.
+                    if (property_exists($obj, 'usersid')){ // If this is an array requested for 'Interactions' collaboration type.
                         $var = $temp;
-                    } else { // Else get the first element, which is the value of 'TOTALS' from query results.
+                    }else{ // Else get the first element, whitch is the value of 'TOTALS' from query results.
                         $temp = array_keys($temp);
-                        $temp = (float)$temp[0] / $totals;
+                        $temp = (float)$temp[0]/$totals;
                         $temp = round($temp, 2);
                         $var += $temp;
                     }
@@ -2215,7 +1729,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * of all students existing actively in a specific course module and updates their number.
      * Only users of 'student' role are accounted and only those existing in a potentially active period of time(defined by timestamps).
      *
-     * @param int $count the number of students found
+     * @param int &$count the number of students found
      * @param string $sqlstr the initial sql string to begin the query
      * @param string $table the enriched criterion operator
      * @param string $col the assortment of levels according to enriched rubric options
@@ -2250,60 +1764,51 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * @param int $instanceid the chat instance id
      * @param string $from the begin time for a potential time stamp
      * @param string $until the end time for a potential time stamp
-     * @param string $selectallstudents an addition to SQL Query for including all enrolled students
      * @return array
      */
-    protected function get_interacted_users_according_to_chat_sessions($instanceid, $from, $until, $selectallstudents) {
+    protected function get_interacted_users_according_to_chat_sessions($instanceid, $from, $until) {
         GLOBAL $DB;
         $sessionuserids = array();
-        $params = array('chatid' => $instanceid);
-        $wherestatement = "chatid = :chatid AND issystem = 0 AND userid $selectallstudents ";
+        $params = array('chatid'=>$instanceid, 'start'=>$from, 'end'=>$until);
 
-        // If there is a from timestamp for the messages, add it.
-        if ($from) {
-            array_push($params['fromtime'], $from);
-            $wherestatement .= "AND timestamp >= :fromtime ";
-        }
-
-        // If there is an until timestamp for the messages, add it.
-        if ($until) {
-            array_push($params['untiltime'], $until);
-            $wherestatement .= "AND timestamp <= :untiltime ";
-        }
-
-        // Get the messages.
-        if ($messages = $DB->get_records_select('chat_messages', $wherestatement, $params, "timestamp DESC, id DESC")) {
-            // Get all the sessions.
+        /// Get the messages.
+        if ($messages = $DB->get_records_select('chat_messages', "chatid = :chatid AND timestamp >= :start AND timestamp <= :end ", $params, "timestamp DESC")) {
+            /// Get all the sessions.
             $sessiongap        = 5 * 60;    // 5 minutes silence means a new session.
             $sessionnbr        = 0;
+            $sessionend        = 0;
+            $sessionstart      = 0;
             $lasttime          = 0;
 
+            $messagesleft = count($messages);
+
             foreach ($messages as $message) {  // We are walking BACKWARDS through the messages.
+                $messagesleft --;              // Countdown.
                 if (!$lasttime) {
                     $lasttime = $message->timestamp;
                 }
-
-                if ((($lasttime - $message->timestamp) < $sessiongap)) {  // Same session.
+                if (!$sessionend) {
+                    $sessionend = $message->timestamp;
+                }
+                if ((($lasttime - $message->timestamp) < $sessiongap) and $messagesleft) {  // Same session.
                     // If current session has no user ids or current user id not in this session, add it.
-                    if (empty($sessionuserids) || !array_key_exists($sessionnbr, $sessionuserids) || !in_array($message->userid, $sessionuserids[$sessionnbr])) {
-                        if (!array_key_exists($sessionnbr, $sessionuserids)) { // Add the new session id, if not exists.
-                            $sessionuserids[$sessionnbr] = array();
-                        }
+                    if ((empty($sessionuserids) || !array_key_exists($sessionnbr, $sessionuserids) || !in_array($message->userid, $sessionuserids[$sessionnbr])) && !$message->system) {
+                        $sessionuserids[$sessionnbr] = array();
                         array_push($sessionuserids[$sessionnbr], $message->userid);
                     }
                 } else {
-                    $sessionnbr++;
-                    $sessionuserids[$sessionnbr] = array();
-                    array_push($sessionuserids[$sessionnbr], $message->userid);
+                    $sessionstart = $lasttime;
+                    $is_complete = ($sessionend - $sessionstart > 60 and array_key_exists($sessionnbr, $sessionuserids));
+                    if ($is_complete) {
+                        $sessionnbr++;
+                    }
+                    $sessionend = $message->timestamp;
+                    if (!$message->system) {
+                        $sessionuserids[$sessionnbr] = array();
+                        array_push($sessionuserids[$sessionnbr], $message->userid);
+                    }
                 }
                 $lasttime = $message->timestamp;
-            }
-
-            // Clean up the array to contain only sessions with more than one interacted users.
-            foreach ($sessionuserids as $key => $userids) {
-                if (count($userids) < 2) {
-                    unset ($sessionuserids[$key]);
-                }
             }
         }
         return $sessionuserids;
@@ -2325,17 +1830,15 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * @see self::evaluate_enrichment()
      */
     protected function get_enriched_level_from_benchmark(&$criterionlevels, $benchmark, $operator, $levelasc) {
-        if (is_null($benchmark)) {
-            return null;
-        }
+        if (is_null($benchmark)) return null;
         $levelfound = null;
         foreach ($criterionlevels as $levelid => $level) { // Iterate through levels.
-            if ($operator == gradingform_erubric_controller::OPERATOR_EQUAL) {
-                if ((int)$benchmark == (int)$level['enrichedvalue']) {
+            if ($operator == gradingform_erubric_controller::OPERATOR_EQUAL){
+                if ((int)$benchmark==(int)$level['enrichedvalue']) {
                     $levelfound = $levelid;
                 }
-            } else {
-                if ((int)$benchmark >= (int)$level['enrichedvalue']) {
+            }else{
+                if ((int)$benchmark>=(int)$level['enrichedvalue']) {
                     $levelfound = $levelid;
                 }
             }
@@ -2344,8 +1847,8 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
                 break;
             }
         }
-        // If any level is found, update current level.
-        if ($levelfound) {
+        // If any level is found, update cuurent level.
+        if ($levelfound){
             $criterionlevels[$levelfound]['checked'] = true;
         }
         return $levelfound;
@@ -2366,7 +1869,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
         if ($idx == $maxidx) {
             $class .= ' last';
         }
-        if ($idx % 2) {
+        if ($idx%2) {
             $class .= ' odd';
         } else {
             $class .= ' even';
@@ -2384,7 +1887,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      */
     public function display_instances($instances, $defaultcontent, $cangrade) {
         $return = '';
-        if (count($instances)) {
+        if (sizeof($instances)) {
             $return .= html_writer::start_tag('div', array('class' => 'advancedgrade'));
             $idx = 0;
             foreach ($instances as $instance) {
@@ -2399,11 +1902,11 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * Displays one grading instance.
      *
      * @param gradingform_erubric_instance $instance
-     * @param int $idx unique number of instance on page
+     * @param int idx unique number of instance on page
      * @param boolean $cangrade whether current user has capability to grade in this context
      */
     public function display_instance(gradingform_erubric_instance $instance, $idx, $cangrade) {
-        $criteria = $instance->get_controller()->get_definition()->erubriccriteria;
+        $criteria = $instance->get_controller()->get_definition()->erubric_criteria;
         $options = $instance->get_controller()->get_options();
         $values = $instance->get_erubric_filling();
         if ($cangrade) {
@@ -2422,7 +1925,7 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Displays a confirmation message after a regrade has occurred.
+     * Displays a confirmation message after a regrade has occured.
      *
      * @param string $elementname
      * @param int $changelevel
@@ -2430,16 +1933,16 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
      * @return string
      */
     public function display_regrade_confirmation($elementname, $changelevel, $value) {
-        $html = html_writer::start_tag('div', array('class' => 'gradingform_erubric-regrade', 'role' => 'alert'));
-        if ($changelevel <= 2) {
-            $html .= html_writer::label(get_string('regrademessage1', 'gradingform_erubric'), 'menu' . $elementname . 'regrade');
+        $html = html_writer::start_tag('div', array('class' => 'gradingform_rubric-regrade'));
+        if ($changelevel<=2) {
+            $html .= get_string('regrademessage1', 'gradingform_erubric');
             $selectoptions = array(
                 0 => get_string('regradeoption0', 'gradingform_erubric'),
                 1 => get_string('regradeoption1', 'gradingform_erubric')
             );
             $html .= html_writer::select($selectoptions, $elementname.'[regrade]', $value, false);
         } else {
-            $html .= get_string('regrademessage2', 'gradingform_erubric');
+            $html .= get_string('regrademessage5', 'gradingform_erubric');
             $html .= html_writer::empty_tag('input', array('name' => $elementname.'[regrade]', 'value' => 1, 'type' => 'hidden'));
         }
         $html .= html_writer::end_tag('div');
@@ -2457,29 +1960,12 @@ class gradingform_erubric_renderer extends plugin_renderer_base {
         if (!$scores) {
             return $html;
         }
-        if ($scores['minscore'] <> 0) {
-            $html .= $this->output->notification(get_string('zerolevelsabsent', 'gradingform_rubric'), 'error');
-        }
         $html .= $this->box(
                 html_writer::tag('h4', get_string('rubricmapping', 'gradingform_erubric')).
                 html_writer::tag('div', get_string('rubricmappingexplained', 'gradingform_erubric', (object)$scores)).
-                html_writer::tag('p', '').
                 html_writer::tag('h4', get_string('enrichedrubricinfo', 'gradingform_erubric')).
-                html_writer::tag('div', get_string('enrichedrubricinfoexplained', 'gradingform_erubric')), 'generalbox rubricmappingexplained');
+                html_writer::tag('div', get_string('enrichedrubricinfoexplained', 'gradingform_erubric'))
+                , 'generalbox rubricmappingexplained');
         return $html;
-    }
-
-    /**
-     * Generates and returns HTML code to display information about the rubric editor.
-     *
-     * @param string $message The message to print out
-     * @param string $classes The classes for the returned div
-     * @return string The HTML to output.
-     */
-    public function notification($message, $classes = 'missingmodule') {
-        return $this->box(html_writer::tag('div',
-                                            get_string('err_attention', 'gradingform_erubric').$message,
-                                            array('class' => 'missingmodule')),
-                                            'generalbox');
     }
 }
